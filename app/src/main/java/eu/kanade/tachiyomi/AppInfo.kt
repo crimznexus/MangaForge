@@ -1,4 +1,5 @@
 package eu.kanade.tachiyomi
+import eu.kanade.tachiyomi.BuildConfig
 
 import tachiyomi.core.common.util.system.ImageUtil
 

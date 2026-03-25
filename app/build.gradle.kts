@@ -21,7 +21,7 @@ if (Config.includeTelemetry) {
 }
 
 android {
-    namespace = "io.mangaforge"
+    namespace = "eu.kanade.tachiyomi"
 
     defaultConfig {
         applicationId = "io.mangaforge"

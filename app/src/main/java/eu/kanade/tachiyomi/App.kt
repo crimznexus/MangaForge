@@ -1,4 +1,6 @@
 package eu.kanade.tachiyomi
+import eu.kanade.tachiyomi.BuildConfig
+import eu.kanade.tachiyomi.R
 
 import android.annotation.SuppressLint
 import android.app.Application

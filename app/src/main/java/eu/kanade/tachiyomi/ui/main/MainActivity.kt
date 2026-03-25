@@ -1,4 +1,5 @@
 package eu.kanade.tachiyomi.ui.main
+import eu.kanade.tachiyomi.R
 
 import android.animation.ValueAnimator
 import android.app.SearchManager

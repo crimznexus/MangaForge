@@ -4,32 +4,48 @@ import androidx.activity.compose.BackHandler
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.expandVertically
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
 import androidx.compose.animation.shrinkVertically
 import androidx.compose.animation.togetherWith
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.RowScope
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.consumeWindowInsets
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.outlined.MoreVert
 import androidx.compose.material3.Badge
 import androidx.compose.material3.BadgedBox
 import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.NavigationBarItem
 import androidx.compose.material3.NavigationRailItem
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.produceState
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.vector.rememberVectorPainter
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.unit.dp
 import androidx.compose.ui.util.fastForEach
 import cafe.adriel.voyager.navigator.LocalNavigator
+import cafe.adriel.voyager.navigator.Navigator
 import cafe.adriel.voyager.navigator.currentOrThrow
 import cafe.adriel.voyager.navigator.tab.LocalTabNavigator
 import cafe.adriel.voyager.navigator.tab.TabNavigator
@@ -38,10 +54,12 @@ import eu.kanade.presentation.util.Screen
 import eu.kanade.presentation.util.isTabletUi
 import eu.kanade.tachiyomi.ui.browse.BrowseTab
 import eu.kanade.tachiyomi.ui.download.DownloadQueueScreen
+import eu.kanade.tachiyomi.ui.explore.ExploreTab
 import eu.kanade.tachiyomi.ui.history.HistoryTab
 import eu.kanade.tachiyomi.ui.library.LibraryTab
 import eu.kanade.tachiyomi.ui.manga.MangaScreen
 import eu.kanade.tachiyomi.ui.more.MoreTab
+import eu.kanade.tachiyomi.ui.suggestions.SuggestionsTab
 import eu.kanade.tachiyomi.ui.updates.UpdatesTab
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.collectLatest
@@ -71,13 +89,22 @@ object HomeScreen : Screen() {
     @Suppress("ConstPropertyName")
     private const val TabNavigatorKey = "HomeTabs"
 
+    // All tabs registered in the navigator
     private val TABS = listOf(
         LibraryTab,
         UpdatesTab,
         HistoryTab,
         BrowseTab,
+        ExploreTab,
+        SuggestionsTab,
         MoreTab,
     )
+
+    // Tabs shown in the bottom navigation bar
+    private val BOTTOM_NAV_TABS = listOf(LibraryTab, SuggestionsTab, ExploreTab, MoreTab)
+
+    // Tabs shown in the floating retractable capsule
+    private val FLOATING_TABS = listOf(UpdatesTab, HistoryTab, BrowseTab)
 
     @Composable
     override fun Content() {
@@ -92,7 +119,7 @@ object HomeScreen : Screen() {
                     startBar = {
                         if (isTabletUi()) {
                             NavigationRail {
-                                TABS.fastForEach {
+                                BOTTOM_NAV_TABS.fastForEach {
                                     NavigationRailItem(it)
                                 }
                             }
@@ -109,7 +136,7 @@ object HomeScreen : Screen() {
                                 exit = shrinkVertically(),
                             ) {
                                 NavigationBar {
-                                    TABS.fastForEach {
+                                    BOTTOM_NAV_TABS.fastForEach {
                                         NavigationBarItem(it)
                                     }
                                 }
@@ -135,6 +162,16 @@ object HomeScreen : Screen() {
                                 it.Content()
                             }
                         }
+
+                        // Floating retractable capsule for secondary tabs
+                        FloatingNavCapsule(
+                            tabs = FLOATING_TABS,
+                            tabNavigator = tabNavigator,
+                            navigator = navigator,
+                            modifier = Modifier
+                                .align(Alignment.BottomEnd)
+                                .padding(end = 16.dp, bottom = 16.dp),
+                        )
                     }
                 }
             }
@@ -178,6 +215,130 @@ object HomeScreen : Screen() {
     }
 
     @Composable
+    private fun FloatingNavCapsule(
+        tabs: List<eu.kanade.presentation.util.Tab>,
+        tabNavigator: TabNavigator,
+        navigator: Navigator,
+        modifier: Modifier = Modifier,
+    ) {
+        var expanded by remember { mutableStateOf(false) }
+        val scope = rememberCoroutineScope()
+
+        BackHandler(enabled = expanded) { expanded = false }
+
+        val activeTab = tabs.firstOrNull { tabNavigator.current::class == it::class }
+
+        Column(
+            modifier = modifier,
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.spacedBy(6.dp),
+        ) {
+            // Expandable items — slides up from the toggle button
+            AnimatedVisibility(
+                visible = expanded,
+                enter = expandVertically(expandFrom = Alignment.Bottom) + fadeIn(),
+                exit = shrinkVertically(shrinkTowards = Alignment.Bottom) + fadeOut(),
+            ) {
+                Surface(
+                    shape = RoundedCornerShape(50.dp),
+                    color = MaterialTheme.colorScheme.surfaceVariant,
+                    tonalElevation = 8.dp,
+                    shadowElevation = 8.dp,
+                ) {
+                    Column(
+                        modifier = Modifier.padding(vertical = 6.dp, horizontal = 2.dp),
+                        horizontalAlignment = Alignment.CenterHorizontally,
+                        verticalArrangement = Arrangement.spacedBy(0.dp),
+                    ) {
+                        tabs.forEach { tab ->
+                            val selected = tabNavigator.current::class == tab::class
+                            FloatingTabItem(
+                                tab = tab,
+                                selected = selected,
+                                onClick = {
+                                    if (!selected) {
+                                        tabNavigator.current = tab
+                                    } else {
+                                        scope.launch { tab.onReselect(navigator) }
+                                    }
+                                    expanded = false
+                                },
+                            )
+                        }
+                    }
+                }
+            }
+
+            // Toggle pill button
+            Surface(
+                onClick = { expanded = !expanded },
+                shape = RoundedCornerShape(50.dp),
+                color = when {
+                    expanded -> MaterialTheme.colorScheme.primary
+                    activeTab != null -> MaterialTheme.colorScheme.primaryContainer
+                    else -> MaterialTheme.colorScheme.surfaceVariant
+                },
+                tonalElevation = 8.dp,
+                shadowElevation = 8.dp,
+            ) {
+                BadgedBox(
+                    modifier = Modifier.padding(12.dp),
+                    badge = { FloatingCapsuleBadge(activeTab) },
+                ) {
+                    Icon(
+                        painter = activeTab?.options?.icon
+                            ?: rememberVectorPainter(Icons.Outlined.MoreVert),
+                        contentDescription = activeTab?.options?.title ?: "More tabs",
+                        tint = when {
+                            expanded -> MaterialTheme.colorScheme.onPrimary
+                            activeTab != null -> MaterialTheme.colorScheme.onPrimaryContainer
+                            else -> MaterialTheme.colorScheme.onSurfaceVariant
+                        },
+                    )
+                }
+            }
+        }
+    }
+
+    @Composable
+    private fun FloatingCapsuleBadge(activeTab: eu.kanade.presentation.util.Tab?) {
+        when {
+            activeTab is UpdatesTab || activeTab == null -> {
+                // Show updates count badge when Updates is active or nothing selected
+                val count by produceState(initialValue = 0) {
+                    val pref = Injekt.get<LibraryPreferences>()
+                    combine(
+                        pref.newShowUpdatesCount.changes(),
+                        pref.newUpdatesCount.changes(),
+                    ) { show, count -> if (show) count else 0 }
+                        .collectLatest { value = it }
+                }
+                if (count > 0 && activeTab == null) {
+                    Badge { Text(count.toString()) }
+                }
+            }
+            BrowseTab::class.isInstance(activeTab) -> {
+                val count by produceState(initialValue = 0) {
+                    Injekt.get<SourcePreferences>().extensionUpdatesCount.changes()
+                        .collectLatest { value = it }
+                }
+                if (count > 0) Badge { Text(count.toString()) }
+            }
+        }
+    }
+
+    @Composable
+    private fun FloatingTabItem(
+        tab: eu.kanade.presentation.util.Tab,
+        selected: Boolean,
+        onClick: () -> Unit,
+    ) {
+        IconButton(onClick = onClick) {
+            NavigationIconItem(tab, selected)
+        }
+    }
+
+    @Composable
     private fun RowScope.NavigationBarItem(tab: eu.kanade.presentation.util.Tab) {
         val tabNavigator = LocalTabNavigator.current
         val navigator = LocalNavigator.currentOrThrow
@@ -192,7 +353,7 @@ object HomeScreen : Screen() {
                     scope.launch { tab.onReselect(navigator) }
                 }
             },
-            icon = { NavigationIconItem(tab) },
+            icon = { NavigationIconItem(tab, selected) },
             label = {
                 Text(
                     text = tab.options.title,
@@ -220,7 +381,7 @@ object HomeScreen : Screen() {
                     scope.launch { tab.onReselect(navigator) }
                 }
             },
-            icon = { NavigationIconItem(tab) },
+            icon = { NavigationIconItem(tab, selected) },
             label = {
                 Text(
                     text = tab.options.title,
@@ -234,7 +395,7 @@ object HomeScreen : Screen() {
     }
 
     @Composable
-    private fun NavigationIconItem(tab: eu.kanade.presentation.util.Tab) {
+    private fun NavigationIconItem(tab: eu.kanade.presentation.util.Tab, selected: Boolean = false) {
         BadgedBox(
             badge = {
                 when {
@@ -286,6 +447,7 @@ object HomeScreen : Screen() {
             Icon(
                 painter = tab.options.icon!!,
                 contentDescription = tab.options.title,
+                tint = if (selected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant,
             )
         }
     }
