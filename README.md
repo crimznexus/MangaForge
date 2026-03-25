@@ -1,6 +1,6 @@
 <div align="center">
 
-<img src="./.github/assets/logo.png" alt="MangaForge logo" title="MangaForge logo" width="80"/>
+<img src="./.github/assets/logo.svg" alt="MangaForge logo" title="MangaForge logo" width="80"/>
 
 # MangaForge
 

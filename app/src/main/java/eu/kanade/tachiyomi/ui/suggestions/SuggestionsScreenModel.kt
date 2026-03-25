@@ -11,14 +11,17 @@ import eu.kanade.tachiyomi.network.jsonMime
 import eu.kanade.tachiyomi.network.parseAs
 import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
+import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.buildJsonObject
+import kotlinx.serialization.json.putJsonArray
 import kotlinx.serialization.json.put
 import kotlinx.serialization.json.putJsonObject
+import kotlinx.serialization.json.JsonPrimitive
 import okhttp3.RequestBody.Companion.toRequestBody
 import tachiyomi.core.common.util.lang.withIOContext
 import uy.kohesive.injekt.Injekt
@@ -89,39 +92,69 @@ class SuggestionsScreenModel(
         .rateLimit(permits = 85, period = 1.minutes)
         .build()
 
+    private val loadedTabs = mutableSetOf<TabKind>()
+
     init { initializeContent() }
 
     // ── Public actions ────────────────────────────────────────────────────────
 
     fun refresh() {
-        mutableState.update { it.copy(rows = emptyList(), genresLoading = true, selectedGenre = null) }
+        mutableState.update {
+            it.copy(
+                genresLoading = true,
+                errorMessage = null,
+            )
+        }
         initializeContent()
     }
 
     fun selectTab(index: Int) {
-        mutableState.update { it.copy(selectedTab = index, selectedGenre = null) }
+        mutableState.update { it.copy(selectedTab = index) }
+        val kind = if (index == 0) TabKind.Manga else TabKind.Manhwa
+        if (kind !in loadedTabs) {
+            ioCoroutineScope.launch {
+                refreshAll(kind)
+                loadedTabs.add(kind)
+            }
+        }
     }
 
-    /** null = deselect (show curated rows) */
-    fun selectGenre(genre: String?) {
-        if (genre == null) {
-            mutableState.update { it.copy(selectedGenre = null) }
-            return
-        }
-        val tab = mutableState.value.selectedTab
-        val rowId = if (tab == 0) "manga_genre_$genre" else "manhwa_genre_$genre"
-        val alreadyExists = mutableState.value.rows.any { it.id == rowId }
-        if (!alreadyExists) {
-            mutableState.update { state ->
-                state.copy(
-                    selectedGenre = genre,
-                    rows = state.rows + SuggestionRowData(rowId, genre),
-                )
+    fun openFilters() {
+        mutableState.update { it.copy(filtersSheetOpen = true) }
+    }
+
+    fun closeFilters() {
+        mutableState.update { it.copy(filtersSheetOpen = false) }
+    }
+
+    fun updateDraftSort(sort: SortOption) = updateDraft { it.copy(sort = sort) }
+    fun updateDraftStatus(status: StatusOption?) = updateDraft { it.copy(status = status) }
+    fun updateDraftFormat(format: FormatOption?) = updateDraft { it.copy(format = format) }
+    fun updateDraftYear(year: Int?) = updateDraft { it.copy(year = year) }
+
+    fun toggleDraftGenre(genre: String) = updateDraft { f ->
+        if (genre in f.genres) f.copy(genres = f.genres - genre) else f.copy(genres = f.genres + genre)
+    }
+
+    fun resetDraft() {
+        mutableState.update { state ->
+            val defaults = defaultFiltersForTab(state.selectedTab)
+            when (state.selectedTab) {
+                0 -> state.copy(draftManga = defaults)
+                else -> state.copy(draftManhwa = defaults)
             }
-            loadSingleRow(rowId)
-        } else {
-            mutableState.update { it.copy(selectedGenre = genre) }
         }
+    }
+
+    fun applyDraft() {
+        mutableState.update { s ->
+            when (s.selectedTab) {
+                0 -> s.copy(appliedManga = s.draftManga)
+                else -> s.copy(appliedManhwa = s.draftManhwa)
+            }
+        }
+        closeFilters()
+        refreshAllForActiveTab()
     }
 
     // ── Initialisation ────────────────────────────────────────────────────────
@@ -133,194 +166,200 @@ class SuggestionsScreenModel(
             } catch (_: Exception) {
                 FALLBACK_GENRES
             }
+            mutableState.update {
+                it.copy(
+                    availableGenres = genres,
+                    genresLoading = false,
+                    errorMessage = null,
+                )
+            }
+            // Load Manga tab on startup; Manhwa is loaded lazily on first visit
+            refreshAll(TabKind.Manga)
+            loadedTabs.add(TabKind.Manga)
+            // If Manhwa was already loaded (e.g. refresh scenario), reload it too
+            if (TabKind.Manhwa in loadedTabs) {
+                refreshAll(TabKind.Manhwa)
+            }
+        }
+    }
 
-            val curatedRows = MANGA_CURATED.map { (id, title) -> SuggestionRowData(id, title) } +
-                MANHWA_CURATED.map { (id, title) -> SuggestionRowData(id, title) }
+    private fun updateDraft(transform: (Filters) -> Filters) {
+        mutableState.update { state ->
+            when (state.selectedTab) {
+                0 -> state.copy(draftManga = transform(state.draftManga))
+                else -> state.copy(draftManhwa = transform(state.draftManhwa))
+            }
+        }
+    }
+
+    private fun refreshAllForActiveTab() {
+        ioCoroutineScope.launch {
+            val kind = if (mutableState.value.selectedTab == 0) TabKind.Manga else TabKind.Manhwa
+            refreshAll(kind)
+        }
+    }
+
+    private suspend fun refreshAll(kind: TabKind) {
+        // Featured shelf (Top Ongoing) and curated shelves
+        when (kind) {
+            TabKind.Manga -> mutableState.update {
+                it.copy(
+                    mangaFeatured = ResultsState.Loading,
+                    mangaTrending = ResultsState.Loading,
+                    mangaPopular = ResultsState.Loading,
+                    mangaNew = ResultsState.Loading,
+                    mangaTopRated = ResultsState.Loading,
+                )
+            }
+            TabKind.Manhwa -> mutableState.update {
+                it.copy(
+                    manhwaFeatured = ResultsState.Loading,
+                    manhwaTrending = ResultsState.Loading,
+                    manhwaPopular = ResultsState.Loading,
+                    manhwaNew = ResultsState.Loading,
+                    manhwaTopRated = ResultsState.Loading,
+                )
+            }
+        }
+
+        when (kind) {
+            TabKind.Manga -> mutableState.update { it.copy(mangaResults = ResultsState.Loading) }
+            TabKind.Manhwa -> mutableState.update { it.copy(manhwaResults = ResultsState.Loading) }
+        }
+        val applied = when (kind) {
+            TabKind.Manga -> mutableState.value.appliedManga
+            TabKind.Manhwa -> mutableState.value.appliedManhwa
+        }
+        try {
+            coroutineScope {
+            val resultsDeferred = async { fetchMedia(kind, applied) }
+            val featuredDeferred = async {
+                fetchMedia(
+                    kind = kind,
+                    filters = Filters(
+                        sort = SortOption.Popular,
+                        status = StatusOption.Releasing,
+                    ),
+                    perPage = 12,
+                )
+            }
+            val trendingDeferred = async {
+                fetchMedia(kind, Filters(sort = SortOption.Trending), perPage = 20)
+            }
+            val popularDeferred = async {
+                fetchMedia(kind, Filters(sort = SortOption.Popular), perPage = 20)
+            }
+            val newDeferred = async {
+                fetchMedia(kind, Filters(sort = SortOption.New), perPage = 20)
+            }
+            val topRatedDeferred = async {
+                fetchMedia(kind, Filters(sort = SortOption.TopRated), perPage = 20)
+            }
+
+            val results = resultsDeferred.await()
+            val featured = featuredDeferred.await()
+            val trending = trendingDeferred.await()
+            val popular = popularDeferred.await()
+            val newItems = newDeferred.await()
+            val topRated = topRatedDeferred.await()
 
             mutableState.update {
-                it.copy(rows = curatedRows, availableGenres = genres, genresLoading = false)
-            }
-
-            // Load all curated rows in parallel
-            ioCoroutineScope.launch {
-                (MANGA_CURATED + MANHWA_CURATED).map { (id, _) ->
-                    async { loadSingleRow(id) }
-                }.awaitAll()
-            }
-        }
-    }
-
-    private fun loadSingleRow(id: String) {
-        ioCoroutineScope.launch {
-            val result = try {
-                RowItemState.Success(fetchRow(id))
-            } catch (e: Exception) {
-                RowItemState.Error(e.message ?: "Failed to load")
-            }
-            mutableState.update { state ->
-                state.copy(rows = state.rows.map { if (it.id == id) it.copy(state = result) else it })
-            }
-        }
-    }
-
-    // ── Row dispatching ───────────────────────────────────────────────────────
-
-    private suspend fun fetchRow(id: String): List<AnilistSuggestionItem> = when (id) {
-        "manga_trending"  -> fetchJapanese("TRENDING_DESC")
-        "manga_popular"   -> fetchJapanese("POPULARITY_DESC")
-        "manga_new"       -> fetchJapaneseNew()
-        "manga_top_rated" -> fetchJapanese("SCORE_DESC")
-        "manga_completed" -> fetchJapaneseCompleted()
-        "manhwa_trending" -> fetchByCountry("KR", "TRENDING_DESC")
-        "manhua_trending" -> fetchByCountry("CN", "TRENDING_DESC")
-        "manhwa_popular"  -> fetchByCountry("KR", "POPULARITY_DESC")
-        "manhwa_new"      -> fetchManhwaNew()
-        "manhwa_completed"-> fetchByCountryCompleted("KR")
-        else -> when {
-            id.startsWith("manga_genre_")  -> fetchJapaneseByGenre(id.removePrefix("manga_genre_"))
-            id.startsWith("manhwa_genre_") -> fetchManhwaByGenre(id.removePrefix("manhwa_genre_"))
-            else -> emptyList()
-        }
-    }
-
-    // ── Query functions ───────────────────────────────────────────────────────
-
-    /** Trending / Popular / Top-rated Japanese manga */
-    private suspend fun fetchJapanese(
-        sort: String,
-        perPage: Int = 20,
-    ): List<AnilistSuggestionItem> = withIOContext {
-        val query = $$"""
-            query Q($perPage: Int) {
-              Page(page: 1, perPage: $perPage) {
-                media(sort: $$sort, type: MANGA, countryOfOrigin: JP, format_not_in: [NOVEL]) {
-                  id title { userPreferred english romaji } coverImage { large } averageScore format
+                when (kind) {
+                    TabKind.Manga -> it.copy(
+                        mangaResults = ResultsState.Success(results),
+                        mangaFeatured = ResultsState.Success(featured),
+                        mangaTrending = ResultsState.Success(trending),
+                        mangaPopular = ResultsState.Success(popular),
+                        mangaNew = ResultsState.Success(newItems),
+                        mangaTopRated = ResultsState.Success(topRated),
+                    )
+                    TabKind.Manhwa -> it.copy(
+                        manhwaResults = ResultsState.Success(results),
+                        manhwaFeatured = ResultsState.Success(featured),
+                        manhwaTrending = ResultsState.Success(trending),
+                        manhwaPopular = ResultsState.Success(popular),
+                        manhwaNew = ResultsState.Success(newItems),
+                        manhwaTopRated = ResultsState.Success(topRated),
+                    )
                 }
-              }
             }
-        """.trimIndent()
-        executeQuery(query, buildJsonObject { put("perPage", perPage) })
+            } // end coroutineScope
+        } catch (e: Exception) {
+            val msg = e.message ?: "Failed to load"
+            mutableState.update {
+                when (kind) {
+                    TabKind.Manga -> it.copy(
+                        mangaResults = ResultsState.Error(msg),
+                        mangaFeatured = ResultsState.Error(msg),
+                        mangaTrending = ResultsState.Error(msg),
+                        mangaPopular = ResultsState.Error(msg),
+                        mangaNew = ResultsState.Error(msg),
+                        mangaTopRated = ResultsState.Error(msg),
+                    )
+                    TabKind.Manhwa -> it.copy(
+                        manhwaResults = ResultsState.Error(msg),
+                        manhwaFeatured = ResultsState.Error(msg),
+                        manhwaTrending = ResultsState.Error(msg),
+                        manhwaPopular = ResultsState.Error(msg),
+                        manhwaNew = ResultsState.Error(msg),
+                        manhwaTopRated = ResultsState.Error(msg),
+                    )
+                }
+            }
+        }
     }
 
-    /** New manga from JP – only series that started recently */
-    private suspend fun fetchJapaneseNew(perPage: Int = 20): List<AnilistSuggestionItem> =
+    private suspend fun fetchMedia(kind: TabKind, filters: Filters, perPage: Int = 60): List<AnilistSuggestionItem> =
         withIOContext {
             val query = $$"""
-                query Q($perPage: Int) {
+                query Q(
+                  $perPage: Int,
+                  $sort: [MediaSort],
+                  $country: CountryCode,
+                  $status: MediaStatus,
+                  $format: MediaFormat,
+                  $genreIn: [String],
+                  $seasonYear: Int
+                ) {
                   Page(page: 1, perPage: $perPage) {
-                    media(sort: START_DATE_DESC, type: MANGA, countryOfOrigin: JP,
-                          format_not_in: [NOVEL], startDate_greater: 20230101) {
-                      id title { userPreferred english romaji } coverImage { large } averageScore format
+                    media(
+                      type: MANGA,
+                      sort: $sort,
+                      countryOfOrigin: $country,
+                      status: $status,
+                      format: $format,
+                      genre_in: $genreIn,
+                      seasonYear: $seasonYear,
+                      format_not_in: [NOVEL]
+                    ) {
+                      id
+                      title { userPreferred english romaji }
+                      coverImage { large }
+                      averageScore
+                      format
                     }
                   }
                 }
             """.trimIndent()
-            executeQuery(query, buildJsonObject { put("perPage", perPage) })
+
+            val country = when (kind) {
+                TabKind.Manga -> "JP"
+                TabKind.Manhwa -> "KR"
+            }
+
+            val variables = buildJsonObject {
+                put("perPage", perPage)
+                put("country", JsonPrimitive(country))
+                putJsonArray("sort") { add(JsonPrimitive(filters.sort.apiValue)) }
+                filters.status?.let { put("status", JsonPrimitive(it.apiValue)) }
+                filters.format?.let { put("format", JsonPrimitive(it.apiValue)) }
+                filters.year?.let { put("seasonYear", it) }
+                if (filters.genres.isNotEmpty()) {
+                    putJsonArray("genreIn") { filters.genres.forEach { add(JsonPrimitive(it)) } }
+                }
+            }
+            executeQuery(query, variables)
         }
-
-    /** Finished / completed Japanese manga */
-    private suspend fun fetchJapaneseCompleted(perPage: Int = 20): List<AnilistSuggestionItem> =
-        withIOContext {
-            val query = $$"""
-                query Q($perPage: Int) {
-                  Page(page: 1, perPage: $perPage) {
-                    media(sort: POPULARITY_DESC, type: MANGA, countryOfOrigin: JP,
-                          format_not_in: [NOVEL], status: FINISHED) {
-                      id title { userPreferred english romaji } coverImage { large } averageScore format
-                    }
-                  }
-                }
-            """.trimIndent()
-            executeQuery(query, buildJsonObject { put("perPage", perPage) })
-        }
-
-    /** Trending / Popular Korean/Chinese titles */
-    private suspend fun fetchByCountry(
-        country: String,
-        sort: String,
-        perPage: Int = 20,
-    ): List<AnilistSuggestionItem> = withIOContext {
-        val query = $$"""
-            query Q($perPage: Int) {
-              Page(page: 1, perPage: $perPage) {
-                media(sort: $$sort, type: MANGA, countryOfOrigin: $$country, format_not_in: [NOVEL]) {
-                  id title { userPreferred english romaji } coverImage { large } averageScore format
-                }
-              }
-            }
-        """.trimIndent()
-        executeQuery(query, buildJsonObject { put("perPage", perPage) })
-    }
-
-    /** New manhwa/manhua started recently */
-    private suspend fun fetchManhwaNew(perPage: Int = 20): List<AnilistSuggestionItem> =
-        withIOContext {
-            val query = $$"""
-                query Q($perPage: Int) {
-                  Page(page: 1, perPage: $perPage) {
-                    media(sort: START_DATE_DESC, type: MANGA, countryOfOrigin: KR,
-                          format_not_in: [NOVEL], startDate_greater: 20230101) {
-                      id title { userPreferred english romaji } coverImage { large } averageScore format
-                    }
-                  }
-                }
-            """.trimIndent()
-            executeQuery(query, buildJsonObject { put("perPage", perPage) })
-        }
-
-    /** Completed manhwa */
-    private suspend fun fetchByCountryCompleted(
-        country: String,
-        perPage: Int = 20,
-    ): List<AnilistSuggestionItem> = withIOContext {
-        val query = $$"""
-            query Q($perPage: Int) {
-              Page(page: 1, perPage: $perPage) {
-                media(sort: POPULARITY_DESC, type: MANGA, countryOfOrigin: $$country,
-                      format_not_in: [NOVEL], status: FINISHED) {
-                  id title { userPreferred english romaji } coverImage { large } averageScore format
-                }
-              }
-            }
-        """.trimIndent()
-        executeQuery(query, buildJsonObject { put("perPage", perPage) })
-    }
-
-    /** Genre row for Japanese manga */
-    private suspend fun fetchJapaneseByGenre(
-        genre: String,
-        perPage: Int = 20,
-    ): List<AnilistSuggestionItem> = withIOContext {
-        val query = $$"""
-            query Q($perPage: Int, $genre: String) {
-              Page(page: 1, perPage: $perPage) {
-                media(sort: POPULARITY_DESC, type: MANGA, countryOfOrigin: JP,
-                      format_not_in: [NOVEL], genre: $genre) {
-                  id title { userPreferred english romaji } coverImage { large } averageScore format
-                }
-              }
-            }
-        """.trimIndent()
-        executeQuery(query, buildJsonObject { put("perPage", perPage); put("genre", genre) })
-    }
-
-    /** Genre row for Korean manhwa */
-    private suspend fun fetchManhwaByGenre(
-        genre: String,
-        perPage: Int = 20,
-    ): List<AnilistSuggestionItem> = withIOContext {
-        val query = $$"""
-            query Q($perPage: Int, $genre: String) {
-              Page(page: 1, perPage: $perPage) {
-                media(sort: POPULARITY_DESC, type: MANGA, countryOfOrigin: KR,
-                      format_not_in: [NOVEL], genre: $genre) {
-                  id title { userPreferred english romaji } coverImage { large } averageScore format
-                }
-              }
-            }
-        """.trimIndent()
-        executeQuery(query, buildJsonObject { put("perPage", perPage); put("genre", genre) })
-    }
 
     private suspend fun fetchGenreCollection(): List<String> = withIOContext {
         val payload = buildJsonObject { put("query", "query { GenreCollection }") }
@@ -372,34 +411,78 @@ class SuggestionsScreenModel(
 
     @Immutable
     data class State(
-        val rows: List<SuggestionRowData> = emptyList(),
         val availableGenres: List<String> = emptyList(),
         val genresLoading: Boolean = true,
         val selectedTab: Int = 0,
-        val selectedGenre: String? = null,
+        val filtersSheetOpen: Boolean = false,
+
+        val draftManga: Filters = defaultFiltersForTab(0),
+        val appliedManga: Filters = defaultFiltersForTab(0),
+        val mangaResults: ResultsState = ResultsState.Loading,
+        val mangaFeatured: ResultsState = ResultsState.Loading,
+        val mangaTrending: ResultsState = ResultsState.Loading,
+        val mangaPopular: ResultsState = ResultsState.Loading,
+        val mangaNew: ResultsState = ResultsState.Loading,
+        val mangaTopRated: ResultsState = ResultsState.Loading,
+
+        val draftManhwa: Filters = defaultFiltersForTab(1),
+        val appliedManhwa: Filters = defaultFiltersForTab(1),
+        val manhwaResults: ResultsState = ResultsState.Loading,
+        val manhwaFeatured: ResultsState = ResultsState.Loading,
+        val manhwaTrending: ResultsState = ResultsState.Loading,
+        val manhwaPopular: ResultsState = ResultsState.Loading,
+        val manhwaNew: ResultsState = ResultsState.Loading,
+        val manhwaTopRated: ResultsState = ResultsState.Loading,
+
+        val errorMessage: String? = null,
     )
 
     companion object {
-        val MANGA_CURATED = listOf(
-            "manga_trending"  to "Trending Now",
-            "manga_popular"   to "All-Time Popular",
-            "manga_new"       to "New Releases",
-            "manga_top_rated" to "Top Rated",
-            "manga_completed" to "Completed Series",
-        )
-
-        val MANHWA_CURATED = listOf(
-            "manhwa_trending"  to "Trending Manhwa",
-            "manhua_trending"  to "Trending Manhua",
-            "manhwa_popular"   to "Popular Manhwa",
-            "manhwa_new"       to "New Releases",
-            "manhwa_completed" to "Completed Manhwa",
-        )
-
         val FALLBACK_GENRES = listOf(
             "Action", "Adventure", "Comedy", "Drama", "Fantasy",
             "Horror", "Mystery", "Psychological", "Romance", "Sci-Fi",
             "Slice of Life", "Sports", "Supernatural", "Thriller",
         )
     }
+}
+
+private enum class TabKind { Manga, Manhwa }
+
+@Immutable
+data class Filters(
+    val sort: SortOption = SortOption.Trending,
+    val genres: Set<String> = emptySet(),
+    val status: StatusOption? = null,
+    val format: FormatOption? = null,
+    val year: Int? = null,
+)
+
+private fun defaultFiltersForTab(tabIndex: Int): Filters {
+    // Currently same defaults; hook for future per-tab differences
+    return Filters()
+}
+
+enum class SortOption(val title: String, val apiValue: String) {
+    Trending("Trending", "TRENDING_DESC"),
+    Popular("Popular", "POPULARITY_DESC"),
+    TopRated("Top Rated", "SCORE_DESC"),
+    New("New", "START_DATE_DESC"),
+}
+
+enum class StatusOption(val title: String, val apiValue: String) {
+    Releasing("Releasing", "RELEASING"),
+    Finished("Finished", "FINISHED"),
+    Hiatus("Hiatus", "HIATUS"),
+    Cancelled("Cancelled", "CANCELLED"),
+}
+
+enum class FormatOption(val title: String, val apiValue: String) {
+    Manga("Manga", "MANGA"),
+    OneShot("One-shot", "ONE_SHOT"),
+}
+
+sealed interface ResultsState {
+    data object Loading : ResultsState
+    data class Success(val items: List<AnilistSuggestionItem>) : ResultsState
+    data class Error(val message: String) : ResultsState
 }

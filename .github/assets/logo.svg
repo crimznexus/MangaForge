@@ -1,0 +1,36 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 500 500" width="80" height="80">
+  <defs>
+    <linearGradient id="flowingGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#4fd1c5" />
+      <stop offset="50%" stop-color="#319795" />
+      <stop offset="100%" stop-color="#2c5282" />
+    </linearGradient>
+    <filter id="shadow" x="-10%" y="-10%" width="120%" height="120%">
+      <feDropShadow dx="0" dy="8" stdDeviation="6" flood-color="#000000" flood-opacity="0.2"/>
+    </filter>
+  </defs>
+
+  <rect width="500" height="500" fill="#f4f5f7" rx="40" />
+
+  <path d="M 80 180 Q 120 100 180 140 T 260 100"
+        fill="none"
+        stroke="url(#flowingGradient)"
+        stroke-width="18"
+        stroke-linecap="round"
+        opacity="0.8"/>
+
+  <text x="50%" y="54%"
+        font-family="'Microsoft YaHei', 'PingFang SC', sans-serif"
+        font-size="240"
+        font-weight="900"
+        fill="url(#flowingGradient)"
+        text-anchor="middle"
+        dominant-baseline="middle"
+        filter="url(#shadow)">漫</text>
+
+  <path d="M 120 380 Q 250 460 380 360 T 450 420"
+        fill="none"
+        stroke="url(#flowingGradient)"
+        stroke-width="24"
+        stroke-linecap="round" />
+</svg>

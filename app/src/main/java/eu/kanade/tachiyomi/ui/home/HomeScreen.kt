@@ -8,24 +8,29 @@ import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.shrinkVertically
 import androidx.compose.animation.togetherWith
+import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.RowScope
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.consumeWindowInsets
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.MoreVert
 import androidx.compose.material3.Badge
 import androidx.compose.material3.BadgedBox
 import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.NavigationBarItem
-import androidx.compose.material3.NavigationRailItem
-import androidx.compose.material3.Surface
+import androidx.compose.material3.NavigationBarItem as M3NavBarItem
+import androidx.compose.material3.NavigationBarItemDefaults
+import androidx.compose.material3.NavigationRailItem as M3NavRailItem
+import androidx.compose.material3.NavigationRailItemDefaults
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
@@ -38,9 +43,13 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.rememberVectorPainter
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.util.fastForEach
@@ -77,6 +86,19 @@ import tachiyomi.presentation.core.i18n.pluralStringResource
 import uy.kohesive.injekt.Injekt
 import uy.kohesive.injekt.api.get
 
+// ── Brand colours (shared with navigation chrome) ────────────────────────────
+
+private val NavDeep   = Color(0xFF3A0075)
+private val NavPurple = Color(0xFF7B2FBE)
+private val NavViolet = Color(0xFFCC44FF)
+private val NavCoral  = Color(0xFFFF6B6B)
+
+private val NavGradient     = listOf(NavDeep, NavPurple)
+private val NavActiveGrad   = listOf(NavPurple, NavViolet)
+private val NavExpandedGrad = listOf(NavCoral, NavPurple)
+
+// ── Screen ────────────────────────────────────────────────────────────────────
+
 object HomeScreen : Screen() {
 
     private val librarySearchEvent = Channel<String>()
@@ -89,7 +111,6 @@ object HomeScreen : Screen() {
     @Suppress("ConstPropertyName")
     private const val TabNavigatorKey = "HomeTabs"
 
-    // All tabs registered in the navigator
     private val TABS = listOf(
         LibraryTab,
         UpdatesTab,
@@ -100,11 +121,8 @@ object HomeScreen : Screen() {
         MoreTab,
     )
 
-    // Tabs shown in the bottom navigation bar
     private val BOTTOM_NAV_TABS = listOf(LibraryTab, SuggestionsTab, ExploreTab, MoreTab)
-
-    // Tabs shown in the floating retractable capsule
-    private val FLOATING_TABS = listOf(UpdatesTab, HistoryTab, BrowseTab)
+    private val FLOATING_TABS   = listOf(UpdatesTab, HistoryTab, BrowseTab)
 
     @Composable
     override fun Content() {
@@ -113,7 +131,6 @@ object HomeScreen : Screen() {
             tab = LibraryTab,
             key = TabNavigatorKey,
         ) { tabNavigator ->
-            // Provide usable navigator to content screen
             CompositionLocalProvider(LocalNavigator provides navigator) {
                 Scaffold(
                     startBar = {
@@ -163,7 +180,6 @@ object HomeScreen : Screen() {
                             }
                         }
 
-                        // Floating retractable capsule for secondary tabs
                         FloatingNavCapsule(
                             tabs = FLOATING_TABS,
                             tabNavigator = tabNavigator,
@@ -177,7 +193,6 @@ object HomeScreen : Screen() {
             }
 
             val goToLibraryTab = { tabNavigator.current = LibraryTab }
-
             BackHandler(enabled = tabNavigator.current != LibraryTab, onBack = goToLibraryTab)
 
             LaunchedEffect(Unit) {
@@ -194,14 +209,11 @@ object HomeScreen : Screen() {
                             Tab.Updates -> UpdatesTab
                             Tab.History -> HistoryTab
                             is Tab.Browse -> {
-                                if (it.toExtensions) {
-                                    BrowseTab.showExtension()
-                                }
+                                if (it.toExtensions) BrowseTab.showExtension()
                                 BrowseTab
                             }
                             is Tab.More -> MoreTab
                         }
-
                         if (it is Tab.Library && it.mangaIdToOpen != null) {
                             navigator.push(MangaScreen(it.mangaIdToOpen))
                         }
@@ -213,6 +225,8 @@ object HomeScreen : Screen() {
             }
         }
     }
+
+    // ── Floating retractable capsule ──────────────────────────────────────────
 
     @Composable
     private fun FloatingNavCapsule(
@@ -230,29 +244,30 @@ object HomeScreen : Screen() {
 
         Column(
             modifier = modifier,
-            horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.spacedBy(6.dp),
+            horizontalAlignment = Alignment.End,
+            verticalArrangement = Arrangement.spacedBy(8.dp),
         ) {
-            // Expandable items — slides up from the toggle button
+            // Expanded menu — slides up from the toggle button
             AnimatedVisibility(
                 visible = expanded,
                 enter = expandVertically(expandFrom = Alignment.Bottom) + fadeIn(),
                 exit = shrinkVertically(shrinkTowards = Alignment.Bottom) + fadeOut(),
             ) {
-                Surface(
-                    shape = RoundedCornerShape(50.dp),
-                    color = MaterialTheme.colorScheme.surfaceVariant,
-                    tonalElevation = 8.dp,
-                    shadowElevation = 8.dp,
+                Box(
+                    modifier = Modifier
+                        .clip(RoundedCornerShape(20.dp))
+                        .background(
+                            Brush.verticalGradient(NavGradient.map { it.copy(alpha = 0.97f) }),
+                        )
+                        .padding(vertical = 8.dp, horizontal = 8.dp),
                 ) {
                     Column(
-                        modifier = Modifier.padding(vertical = 6.dp, horizontal = 2.dp),
-                        horizontalAlignment = Alignment.CenterHorizontally,
-                        verticalArrangement = Arrangement.spacedBy(0.dp),
+                        horizontalAlignment = Alignment.End,
+                        verticalArrangement = Arrangement.spacedBy(2.dp),
                     ) {
                         tabs.forEach { tab ->
                             val selected = tabNavigator.current::class == tab::class
-                            FloatingTabItem(
+                            FloatingTabItemWithLabel(
                                 tab = tab,
                                 selected = selected,
                                 onClick = {
@@ -270,30 +285,31 @@ object HomeScreen : Screen() {
             }
 
             // Toggle pill button
-            Surface(
-                onClick = { expanded = !expanded },
-                shape = RoundedCornerShape(50.dp),
-                color = when {
-                    expanded -> MaterialTheme.colorScheme.primary
-                    activeTab != null -> MaterialTheme.colorScheme.primaryContainer
-                    else -> MaterialTheme.colorScheme.surfaceVariant
-                },
-                tonalElevation = 8.dp,
-                shadowElevation = 8.dp,
+            Box(
+                modifier = Modifier
+                    .size(54.dp)
+                    .clip(CircleShape)
+                    .background(
+                        Brush.linearGradient(
+                            when {
+                                expanded  -> NavExpandedGrad
+                                activeTab != null -> NavActiveGrad
+                                else      -> NavGradient
+                            },
+                        ),
+                    )
+                    .clickable { expanded = !expanded },
+                contentAlignment = Alignment.Center,
             ) {
                 BadgedBox(
-                    modifier = Modifier.padding(12.dp),
                     badge = { FloatingCapsuleBadge(activeTab) },
                 ) {
                     Icon(
                         painter = activeTab?.options?.icon
                             ?: rememberVectorPainter(Icons.Outlined.MoreVert),
                         contentDescription = activeTab?.options?.title ?: "More tabs",
-                        tint = when {
-                            expanded -> MaterialTheme.colorScheme.onPrimary
-                            activeTab != null -> MaterialTheme.colorScheme.onPrimaryContainer
-                            else -> MaterialTheme.colorScheme.onSurfaceVariant
-                        },
+                        tint = Color.White,
+                        modifier = Modifier.size(22.dp),
                     )
                 }
             }
@@ -304,7 +320,6 @@ object HomeScreen : Screen() {
     private fun FloatingCapsuleBadge(activeTab: eu.kanade.presentation.util.Tab?) {
         when {
             activeTab is UpdatesTab || activeTab == null -> {
-                // Show updates count badge when Updates is active or nothing selected
                 val count by produceState(initialValue = 0) {
                     val pref = Injekt.get<LibraryPreferences>()
                     combine(
@@ -328,15 +343,36 @@ object HomeScreen : Screen() {
     }
 
     @Composable
-    private fun FloatingTabItem(
+    private fun FloatingTabItemWithLabel(
         tab: eu.kanade.presentation.util.Tab,
         selected: Boolean,
         onClick: () -> Unit,
     ) {
-        IconButton(onClick = onClick) {
-            NavigationIconItem(tab, selected)
+        Row(
+            modifier = Modifier
+                .clip(RoundedCornerShape(50))
+                .background(if (selected) Color.White.copy(alpha = 0.18f) else Color.Transparent)
+                .clickable(onClick = onClick)
+                .padding(horizontal = 16.dp, vertical = 10.dp),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(10.dp),
+        ) {
+            Text(
+                text = tab.options.title,
+                style = MaterialTheme.typography.labelMedium,
+                fontWeight = if (selected) FontWeight.Bold else FontWeight.Normal,
+                color = Color.White,
+            )
+            Icon(
+                painter = tab.options.icon!!,
+                contentDescription = tab.options.title,
+                tint = Color.White,
+                modifier = Modifier.size(20.dp),
+            )
         }
     }
+
+    // ── Bottom navigation items ───────────────────────────────────────────────
 
     @Composable
     private fun RowScope.NavigationBarItem(tab: eu.kanade.presentation.util.Tab) {
@@ -344,7 +380,7 @@ object HomeScreen : Screen() {
         val navigator = LocalNavigator.currentOrThrow
         val scope = rememberCoroutineScope()
         val selected = tabNavigator.current::class == tab::class
-        NavigationBarItem(
+        M3NavBarItem(
             selected = selected,
             onClick = {
                 if (!selected) {
@@ -363,6 +399,13 @@ object HomeScreen : Screen() {
                 )
             },
             alwaysShowLabel = true,
+            colors = NavigationBarItemDefaults.colors(
+                selectedIconColor = NavPurple,
+                selectedTextColor = NavPurple,
+                indicatorColor = NavPurple.copy(alpha = 0.12f),
+                unselectedIconColor = MaterialTheme.colorScheme.onSurfaceVariant,
+                unselectedTextColor = MaterialTheme.colorScheme.onSurfaceVariant,
+            ),
         )
     }
 
@@ -372,7 +415,7 @@ object HomeScreen : Screen() {
         val navigator = LocalNavigator.currentOrThrow
         val scope = rememberCoroutineScope()
         val selected = tabNavigator.current::class == tab::class
-        NavigationRailItem(
+        M3NavRailItem(
             selected = selected,
             onClick = {
                 if (!selected) {
@@ -391,11 +434,21 @@ object HomeScreen : Screen() {
                 )
             },
             alwaysShowLabel = true,
+            colors = NavigationRailItemDefaults.colors(
+                selectedIconColor = NavPurple,
+                selectedTextColor = NavPurple,
+                indicatorColor = NavPurple.copy(alpha = 0.12f),
+                unselectedIconColor = MaterialTheme.colorScheme.onSurfaceVariant,
+                unselectedTextColor = MaterialTheme.colorScheme.onSurfaceVariant,
+            ),
         )
     }
 
     @Composable
-    private fun NavigationIconItem(tab: eu.kanade.presentation.util.Tab, selected: Boolean = false) {
+    private fun NavigationIconItem(
+        tab: eu.kanade.presentation.util.Tab,
+        selected: Boolean = false,
+    ) {
         BadgedBox(
             badge = {
                 when {
@@ -447,7 +500,7 @@ object HomeScreen : Screen() {
             Icon(
                 painter = tab.options.icon!!,
                 contentDescription = tab.options.title,
-                tint = if (selected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant,
+                tint = if (selected) NavPurple else MaterialTheme.colorScheme.onSurfaceVariant,
             )
         }
     }

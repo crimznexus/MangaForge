@@ -14,7 +14,7 @@ data object SuggestionsTab : Tab {
         @Composable
         get() = TabOptions(
             index = 2u,
-            title = "Suggestions",
+            title = "Discover",
             icon = rememberVectorPainter(Icons.Outlined.AutoAwesome),
         )
 
