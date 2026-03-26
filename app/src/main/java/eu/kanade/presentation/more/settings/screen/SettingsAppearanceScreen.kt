@@ -84,6 +84,7 @@ object SettingsAppearanceScreen : SearchableSettings {
                 Preference.PreferenceItem.SwitchPreference(
                     preference = amoledPref,
                     title = stringResource(MR.strings.pref_dark_theme_pure_black),
+                    subtitle = stringResource(MR.strings.pref_dark_theme_pure_black_summary),
                     enabled = themeMode != ThemeMode.LIGHT,
                     onValueChanged = {
                         (context as? Activity)?.let { ActivityCompat.recreate(it) }
