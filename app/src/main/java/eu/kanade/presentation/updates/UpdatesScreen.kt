@@ -1,8 +1,12 @@
 package eu.kanade.presentation.updates
 
 import androidx.activity.compose.BackHandler
+import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.graphics.Color
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.CalendarMonth
 import androidx.compose.material.icons.outlined.FilterList
@@ -151,51 +155,62 @@ private fun UpdatesAppBar(
     scrollBehavior: TopAppBarScrollBehavior,
     modifier: Modifier = Modifier,
 ) {
-    AppBar(
-        modifier = modifier,
-        title = stringResource(MR.strings.label_recent_updates),
-        actions = {
-            AppBarActions(
-                persistentListOf(
-                    AppBar.Action(
-                        title = stringResource(MR.strings.action_filter),
-                        icon = Icons.Outlined.FilterList,
-                        iconTint = if (hasFilters) MaterialTheme.colorScheme.active else LocalContentColor.current,
-                        onClick = onFilterClicked,
-                    ),
-                    AppBar.Action(
-                        title = stringResource(MR.strings.action_view_upcoming),
-                        icon = Icons.Outlined.CalendarMonth,
-                        onClick = onCalendarClicked,
-                    ),
-                    AppBar.Action(
-                        title = stringResource(MR.strings.action_update_library),
-                        icon = Icons.Outlined.Refresh,
-                        onClick = onUpdateLibrary,
-                    ),
+    Box(
+        modifier = modifier
+            .fillMaxWidth()
+            .background(
+                Brush.linearGradient(
+                    listOf(Color(0xFF3A0075), Color(0xFF7B2FBE), Color(0xFFCC44FF)),
                 ),
-            )
-        },
-        actionModeCounter = actionModeCounter,
-        onCancelActionMode = onCancelActionMode,
-        actionModeActions = {
-            AppBarActions(
-                persistentListOf(
-                    AppBar.Action(
-                        title = stringResource(MR.strings.action_select_all),
-                        icon = Icons.Outlined.SelectAll,
-                        onClick = onSelectAll,
+            ),
+    ) {
+        AppBar(
+            modifier = Modifier,
+            backgroundColor = Color.Transparent,
+            title = stringResource(MR.strings.label_recent_updates),
+            actions = {
+                AppBarActions(
+                    persistentListOf(
+                        AppBar.Action(
+                            title = stringResource(MR.strings.action_filter),
+                            icon = Icons.Outlined.FilterList,
+                            iconTint = if (hasFilters) MaterialTheme.colorScheme.active else LocalContentColor.current,
+                            onClick = onFilterClicked,
+                        ),
+                        AppBar.Action(
+                            title = stringResource(MR.strings.action_view_upcoming),
+                            icon = Icons.Outlined.CalendarMonth,
+                            onClick = onCalendarClicked,
+                        ),
+                        AppBar.Action(
+                            title = stringResource(MR.strings.action_update_library),
+                            icon = Icons.Outlined.Refresh,
+                            onClick = onUpdateLibrary,
+                        ),
                     ),
-                    AppBar.Action(
-                        title = stringResource(MR.strings.action_select_inverse),
-                        icon = Icons.Outlined.FlipToBack,
-                        onClick = onInvertSelection,
+                )
+            },
+            actionModeCounter = actionModeCounter,
+            onCancelActionMode = onCancelActionMode,
+            actionModeActions = {
+                AppBarActions(
+                    persistentListOf(
+                        AppBar.Action(
+                            title = stringResource(MR.strings.action_select_all),
+                            icon = Icons.Outlined.SelectAll,
+                            onClick = onSelectAll,
+                        ),
+                        AppBar.Action(
+                            title = stringResource(MR.strings.action_select_inverse),
+                            icon = Icons.Outlined.FlipToBack,
+                            onClick = onInvertSelection,
+                        ),
                     ),
-                ),
-            )
-        },
-        scrollBehavior = scrollBehavior,
-    )
+                )
+            },
+            scrollBehavior = scrollBehavior,
+        )
+    }
 }
 
 @Composable

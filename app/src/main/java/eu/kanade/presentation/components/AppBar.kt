@@ -277,11 +277,13 @@ fun SearchToolbar(
     scrollBehavior: TopAppBarScrollBehavior? = null,
     visualTransformation: VisualTransformation = VisualTransformation.None,
     interactionSource: MutableInteractionSource = remember { MutableInteractionSource() },
+    backgroundColor: Color? = null,
 ) {
     val focusRequester = remember { FocusRequester() }
 
     AppBar(
         modifier = modifier,
+        backgroundColor = backgroundColor,
         titleContent = {
             if (searchQuery == null) return@AppBar titleContent()
 

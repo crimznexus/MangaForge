@@ -1,18 +1,31 @@
 package eu.kanade.tachiyomi.ui.explore
 
+import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.Refresh
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
-import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.State
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.unit.dp
 import cafe.adriel.voyager.core.model.rememberScreenModel
 import cafe.adriel.voyager.navigator.LocalNavigator
 import cafe.adriel.voyager.navigator.currentOrThrow
@@ -30,6 +43,8 @@ import eu.kanade.tachiyomi.util.system.LocaleHelper
 import tachiyomi.domain.manga.model.Manga
 import tachiyomi.presentation.core.components.material.Scaffold
 
+private val HeaderGradient = listOf(Color(0xFF3A0075), Color(0xFF7B2FBE), Color(0xFFCC44FF))
+
 object ExploreScreen : Screen() {
 
     @Composable
@@ -42,14 +57,44 @@ object ExploreScreen : Screen() {
 
         Scaffold(
             topBar = {
-                TopAppBar(
-                    title = { Text("Explore") },
-                    actions = {
-                        IconButton(onClick = screenModel::loadPopular) {
-                            Icon(Icons.Outlined.Refresh, contentDescription = "Refresh")
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .background(Brush.linearGradient(HeaderGradient)),
+                ) {
+                    Column(
+                        modifier = Modifier
+                            .statusBarsPadding()
+                            .padding(start = 20.dp, end = 8.dp, top = 8.dp, bottom = 18.dp),
+                    ) {
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                            verticalAlignment = Alignment.Top,
+                        ) {
+                            Column {
+                                Text(
+                                    text = "Explore",
+                                    style = MaterialTheme.typography.headlineMedium,
+                                    fontWeight = FontWeight.ExtraBold,
+                                    color = Color.White,
+                                )
+                                Text(
+                                    text = "Browse your sources",
+                                    style = MaterialTheme.typography.bodySmall,
+                                    color = Color.White.copy(alpha = 0.75f),
+                                )
+                            }
+                            IconButton(onClick = screenModel::loadPopular) {
+                                Icon(
+                                    Icons.Outlined.Refresh,
+                                    contentDescription = "Refresh",
+                                    tint = Color.White,
+                                )
+                            }
                         }
-                    },
-                )
+                    }
+                }
             },
         ) { paddingValues ->
             ExploreContent(

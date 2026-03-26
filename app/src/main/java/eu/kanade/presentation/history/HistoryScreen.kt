@@ -1,7 +1,12 @@
 package eu.kanade.presentation.history
 
+import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.graphics.Color
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.DeleteSweep
@@ -43,25 +48,36 @@ fun HistoryScreen(
 ) {
     Scaffold(
         topBar = { scrollBehavior ->
-            SearchToolbar(
-                titleContent = { AppBarTitle(stringResource(MR.strings.history)) },
-                searchQuery = state.searchQuery,
-                onChangeSearchQuery = onSearchQueryChange,
-                actions = {
-                    AppBarActions(
-                        persistentListOf(
-                            AppBar.Action(
-                                title = stringResource(MR.strings.pref_clear_history),
-                                icon = Icons.Outlined.DeleteSweep,
-                                onClick = {
-                                    onDialogChange(HistoryScreenModel.Dialog.DeleteAll)
-                                },
-                            ),
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .background(
+                        Brush.linearGradient(
+                            listOf(Color(0xFF3A0075), Color(0xFF7B2FBE), Color(0xFFCC44FF)),
                         ),
-                    )
-                },
-                scrollBehavior = scrollBehavior,
-            )
+                    ),
+            ) {
+                SearchToolbar(
+                    titleContent = { AppBarTitle(stringResource(MR.strings.history)) },
+                    searchQuery = state.searchQuery,
+                    onChangeSearchQuery = onSearchQueryChange,
+                    backgroundColor = Color.Transparent,
+                    actions = {
+                        AppBarActions(
+                            persistentListOf(
+                                AppBar.Action(
+                                    title = stringResource(MR.strings.pref_clear_history),
+                                    icon = Icons.Outlined.DeleteSweep,
+                                    onClick = {
+                                        onDialogChange(HistoryScreenModel.Dialog.DeleteAll)
+                                    },
+                                ),
+                            ),
+                        )
+                    },
+                    scrollBehavior = scrollBehavior,
+                )
+            }
         },
         snackbarHost = { SnackbarHost(hostState = snackbarHostState) },
     ) { contentPadding ->
