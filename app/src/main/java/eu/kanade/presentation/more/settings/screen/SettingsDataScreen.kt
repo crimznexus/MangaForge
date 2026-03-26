@@ -81,22 +81,10 @@ import uy.kohesive.injekt.api.get
 object SettingsDataScreen : SearchableSettings {
 
     val restorePreferenceKeyString = MR.strings.label_backup
-    const val HELP_URL = "https://mihon.app/docs/faq/storage"
 
     @ReadOnlyComposable
     @Composable
     override fun getTitleRes() = MR.strings.label_data_storage
-
-    @Composable
-    override fun RowScope.AppBarAction() {
-        val uriHandler = LocalUriHandler.current
-        IconButton(onClick = { uriHandler.openUri(HELP_URL) }) {
-            Icon(
-                imageVector = Icons.AutoMirrored.Outlined.HelpOutline,
-                contentDescription = stringResource(MR.strings.tracking_guide),
-            )
-        }
-    }
 
     @Composable
     override fun getPreferences(): List<Preference> {

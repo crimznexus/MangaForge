@@ -19,6 +19,8 @@ import androidx.compose.material.icons.outlined.Search
 import androidx.compose.material.icons.outlined.Security
 import androidx.compose.material.icons.outlined.Storage
 import androidx.compose.material.icons.outlined.Sync
+import androidx.compose.foundation.layout.size
+import androidx.compose.ui.res.painterResource
 import androidx.compose.material3.LocalContentColor
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.TopAppBarDefaults
@@ -87,6 +89,14 @@ object SettingsMainScreen : Screen() {
                     title = stringResource(MR.strings.label_settings),
                     navigateUp = backPress::invoke,
                     actions = {
+                        androidx.compose.material3.Icon(
+                            painter = painterResource(id = eu.kanade.tachiyomi.R.drawable.ic_mihon),
+                            contentDescription = null,
+                            modifier = Modifier
+                                .padding(end = 8.dp)
+                                .size(32.dp),
+                            tint = Color.Unspecified
+                        )
                         AppBarActions(
                             persistentListOf(
                                 AppBar.Action(

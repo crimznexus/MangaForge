@@ -4,25 +4,89 @@
     android:viewportWidth="432"
     android:viewportHeight="432">
 
-  <!-- Top flowing accent curve -->
+  <!--
+    Drawing order mirrors the SVG:
+      1. Top strokes (under character)
+      2. 漫 character
+      3. Bottom strokes (over character — creates ink-through-kanji effect)
+  -->
+
+  <!-- TOP: light background sweep -->
   <path
-      android:pathData="M 69 156 Q 104 86 156 121 Q 207 156 225 86"
+      android:pathData="M 22 95 Q 82 35 164 62 Q 246 88 304 44 Q 354 8 424 32"
       android:fillColor="#00000000"
-      android:strokeColor="#AAFFFFFF"
-      android:strokeWidth="13"
+      android:strokeColor="#55E8341A"
+      android:strokeWidth="5"
       android:strokeLineCap="round"/>
 
-  <!-- 漫 character (Microsoft YaHei Bold, U+6F2B) -->
+  <!-- TOP: main thick brush stroke (glow layer) -->
   <path
-      android:fillColor="#FFFFFFFF"
-      android:pathData="M72.64 39.25Q107.27 64.60 136.91 89.60L105.84 124.95Q77.28 98.17 43.36 71.74ZM149.41 51.39H361.51V154.23H149.41ZM318.66 77.10H192.25V91.38H318.66ZM318.66 128.52V114.23H192.25V128.52ZM67.64 135.66Q101.92 161.73 125.48 181.72L93.35 218.14Q66.21 191.01 38.0 168.51ZM130.84 250.28V168.51H375.43V250.28ZM237.60 221.36H268.67V197.43H237.60ZM331.16 221.36V197.43H300.80V221.36ZM175.12 221.36H205.47V197.43H175.12ZM80.13 242.07Q100.84 248.49 127.27 255.28L97.63 389.54Q73.00 383.11 48.71 378.47Q65.14 318.48 80.13 242.07ZM358.29 264.56V296.70Q334.19 320.80 303.13 339.01Q342.76 348.12 394.0 351.33Q384.72 374.54 377.22 391.68Q305.27 385.79 252.24 363.65Q199.40 384.36 131.91 392.75Q124.41 375.61 111.20 353.83Q164.76 349.37 205.82 338.83Q182.61 323.30 164.76 303.13L175.65 298.13H147.26V264.56ZM252.78 322.94Q277.24 312.23 294.73 298.13H210.64Q228.14 312.41 252.78 322.94Z"/>
-
-  <!-- Bottom flowing accent curve -->
-  <path
-      android:pathData="M 104 328 Q 216 397 328 311 Q 441 225 389 363"
+      android:pathData="M 40 112 Q 100 50 176 78 Q 252 106 310 58 Q 360 20 420 50"
       android:fillColor="#00000000"
-      android:strokeColor="#AAFFFFFF"
-      android:strokeWidth="17"
+      android:strokeColor="#447A0C06"
+      android:strokeWidth="34"
+      android:strokeLineCap="round"/>
+  <!-- TOP: main thick brush stroke -->
+  <path
+      android:pathData="M 40 112 Q 100 50 176 78 Q 252 106 310 58 Q 360 20 420 50"
+      android:fillColor="#00000000"
+      android:strokeColor="#FFC01E0E"
+      android:strokeWidth="22"
+      android:strokeLineCap="round"/>
+  <!-- TOP: hair edge highlight -->
+  <path
+      android:pathData="M 40 112 Q 100 50 176 78 Q 252 106 310 58 Q 360 20 420 50"
+      android:fillColor="#00000000"
+      android:strokeColor="#59FF6040"
+      android:strokeWidth="3"
+      android:strokeLineCap="round"/>
+  <!-- TOP: secondary thinner parallel stroke -->
+  <path
+      android:pathData="M 56 130 Q 112 76 184 94 Q 260 112 316 74 Q 366 40 426 66"
+      android:fillColor="#00000000"
+      android:strokeColor="#8CC01E0E"
+      android:strokeWidth="10"
+      android:strokeLineCap="round"/>
+
+  <!-- 漫 CHARACTER — dark ink, near black with red undertone -->
+  <path
+      android:fillColor="#FF1C0E0A"
+      android:pathData="M80.14 55.0Q112.96 79.03 141.05 102.71L111.61 136.21Q84.54 110.83 52.39 85.79ZM152.89 66.51H353.89V163.96H152.89ZM313.29 90.87H193.50V104.40H313.29ZM313.29 139.60V126.06H193.50V139.60ZM75.40 146.36Q107.89 171.07 130.22 190.02L99.77 224.53Q74.05 198.81 47.32 177.49ZM135.30 254.98V177.49H367.09V254.98ZM236.47 227.58H265.91V204.90H236.47ZM325.13 227.58V204.90H296.37V227.58ZM177.26 227.58H206.02V204.90H177.26ZM87.24 247.20Q106.87 253.29 131.91 259.72L103.83 386.95Q80.48 380.86 57.47 376.46Q73.03 319.62 87.24 247.20ZM350.85 268.52V298.97Q328.01 321.82 298.57 339.07Q336.13 347.70 384.68 350.75Q375.89 372.74 368.78 388.98Q300.60 383.40 250.35 362.42Q200.27 382.05 136.31 390.0Q129.20 373.76 116.68 353.12Q167.44 348.89 206.36 338.90Q184.36 324.18 167.44 305.07L177.76 300.33H150.86V268.52ZM250.85 323.85Q274.03 313.69 290.61 300.33H210.92Q227.51 313.86 250.85 323.85Z"/>
+
+  <!-- BOTTOM: light background sweep (drawn over character) -->
+  <path
+      android:pathData="M 38 398 Q 124 462 238 420 Q 348 378 412 430 Q 438 448 462 428"
+      android:fillColor="#00000000"
+      android:strokeColor="#4DE8341A"
+      android:strokeWidth="7"
+      android:strokeLineCap="round"/>
+  <!-- BOTTOM: main thick stroke (glow layer) -->
+  <path
+      android:pathData="M 26 378 Q 118 444 234 404 Q 346 364 404 416 Q 428 434 426 430"
+      android:fillColor="#00000000"
+      android:strokeColor="#447A0C06"
+      android:strokeWidth="40"
+      android:strokeLineCap="round"/>
+  <!-- BOTTOM: main thick stroke -->
+  <path
+      android:pathData="M 26 378 Q 118 444 234 404 Q 346 364 404 416 Q 428 434 426 430"
+      android:fillColor="#00000000"
+      android:strokeColor="#FFC01E0E"
+      android:strokeWidth="26"
+      android:strokeLineCap="round"/>
+  <!-- BOTTOM: hair edge highlight -->
+  <path
+      android:pathData="M 26 378 Q 118 444 234 404 Q 346 364 404 416 Q 428 434 426 430"
+      android:fillColor="#00000000"
+      android:strokeColor="#4DFF5030"
+      android:strokeWidth="3.5"
+      android:strokeLineCap="round"/>
+  <!-- BOTTOM: secondary thinner parallel -->
+  <path
+      android:pathData="M 42 362 Q 132 422 244 386 Q 348 348 406 400 Q 428 416 426 408"
+      android:fillColor="#00000000"
+      android:strokeColor="#80C01E0E"
+      android:strokeWidth="11"
       android:strokeLineCap="round"/>
 
 </vector>

@@ -41,7 +41,7 @@ jobs:
         run: |
           mkdir -p release-apks
           find app/build/outputs/apk/debug -name "*.apk" -exec sh -c \
-            'name=$(basename "$1" .apk); cp "$1" "release-apks/mangaforge-${{ steps.tag.outputs.tag }}-${name#app-}.apk"' _ {} \;
+            'arch=$(basename "$1" .apk | sed "s/^app-//" | sed "s/-debug$//"); cp "$1" "release-apks/mangaforge-${{ steps.tag.outputs.tag }}-${arch}.apk"' _ {} \;
           ls release-apks/
 
       - name: Create GitHub Release
@@ -52,18 +52,18 @@ jobs:
           body: |
             ## MangaForge ${{ steps.tag.outputs.tag }}
 
-            A modern, colourful Android manga/webtoon reader built with Kotlin + Jetpack Compose.
+            A modern Android manga & webtoon reader built with Kotlin + Jetpack Compose.
 
             ### Install
             Pick the APK for your device architecture, or use the **universal** build if unsure:
             | APK | Architecture |
             |-----|-------------|
-            | `*-arm64-v8a-debug.apk` | Most modern phones (recommended) |
-            | `*-armeabi-v7a-debug.apk` | Older 32-bit ARM phones |
-            | `*-x86_64-debug.apk` | x86_64 emulators / Chromebooks |
-            | `*-universal-debug.apk` | All devices (largest file) |
+            | `*-arm64-v8a.apk` | Most modern phones (recommended) |
+            | `*-armeabi-v7a.apk` | Older 32-bit ARM phones |
+            | `*-x86_64.apk` | x86_64 emulators / Chromebooks |
+            | `*-universal.apk` | All devices (largest file) |
 
-            > **Note:** Build is debug-signed. Enable *Install unknown apps* in Android settings before sideloading.
+            > **Note:** Enable *Install unknown apps* in Android settings before sideloading.
           files: release-apks/*.apk
           draft: false
           prerelease: false
