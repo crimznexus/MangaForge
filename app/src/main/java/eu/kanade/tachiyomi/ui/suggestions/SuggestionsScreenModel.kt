@@ -233,7 +233,7 @@ class SuggestionsScreenModel(
                 fetchMedia(
                     kind = kind,
                     filters = Filters(
-                        sort = SortOption.Popular,
+                        sort = SortOption.New,
                         status = StatusOption.Releasing,
                     ),
                     perPage = 12,
