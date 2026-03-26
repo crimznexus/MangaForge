@@ -25,6 +25,9 @@ import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.GridItemSpan
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
+import androidx.compose.foundation.pager.HorizontalPager
+import androidx.compose.foundation.pager.rememberPagerState
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.Tune
@@ -43,11 +46,13 @@ import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import kotlinx.coroutines.delay
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -336,7 +341,7 @@ private fun GradientHeader(
     }
 }
 
-// ── Hero banner ───────────────────────────────────────────────────────────────
+// ── Hero carousel ─────────────────────────────────────────────────────────────
 
 @Composable
 private fun HeroBanner(
@@ -344,35 +349,45 @@ private fun HeroBanner(
     onClickItem: (AnilistSuggestionItem) -> Unit,
     modifier: Modifier = Modifier,
 ) {
-    val item = (state as? ResultsState.Success)?.items?.firstOrNull()
+    val items = (state as? ResultsState.Success)?.items?.take(8) ?: emptyList()
+    val pagerState = rememberPagerState(pageCount = { maxOf(items.size, 1) })
+
+    // Auto-advance every 4 seconds
+    if (items.size > 1) {
+        LaunchedEffect(pagerState) {
+            while (true) {
+                delay(4_000)
+                if (!pagerState.isScrollInProgress) {
+                    pagerState.animateScrollToPage((pagerState.currentPage + 1) % items.size)
+                }
+            }
+        }
+    }
+
     Box(
         modifier = modifier
             .fillMaxWidth()
             .height(320.dp)
             .clip(MaterialTheme.shapes.large)
-            .background(MaterialTheme.colorScheme.surfaceVariant)
-            .then(if (item != null) Modifier.clickable { onClickItem(item) } else Modifier),
+            .background(MaterialTheme.colorScheme.surfaceVariant),
     ) {
-        if (item != null) {
-            AsyncImage(
-                model = item.coverUrl,
-                contentDescription = item.title,
-                contentScale = ContentScale.Crop,
+        if (items.isEmpty()) {
+            if (state is ResultsState.Loading) {
+                CircularProgressIndicator(
+                    modifier = Modifier.align(Alignment.Center),
+                    color = BrandPurple,
+                )
+            }
+        } else {
+            HorizontalPager(
+                state = pagerState,
                 modifier = Modifier.fillMaxSize(),
-            )
-            // Dark gradient overlay
-            Box(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .background(
-                        Brush.verticalGradient(
-                            0.0f to Color.Transparent,
-                            0.28f to Color.Transparent,
-                            1.0f to Color.Black.copy(alpha = 0.92f),
-                        ),
-                    ),
-            )
-            // Coloured accent strip at the bottom
+            ) { page ->
+                val item = items[page]
+                HeroBannerPage(item = item, onClick = { onClickItem(item) })
+            }
+
+            // Accent strip
             Box(
                 modifier = Modifier
                     .align(Alignment.BottomStart)
@@ -380,53 +395,97 @@ private fun HeroBanner(
                     .height(3.dp)
                     .background(Brush.linearGradient(AccentGradient)),
             )
-            Column(
+
+            // Page indicator dots
+            Row(
                 modifier = Modifier
-                    .align(Alignment.BottomStart)
-                    .padding(start = 16.dp, end = 16.dp, bottom = 14.dp),
+                    .align(Alignment.BottomCenter)
+                    .padding(bottom = 10.dp),
+                horizontalArrangement = Arrangement.spacedBy(5.dp),
+                verticalAlignment = Alignment.CenterVertically,
             ) {
-                // Format badge
-                item.format?.let { fmt ->
+                repeat(items.size) { index ->
+                    val selected = pagerState.currentPage == index
                     Box(
                         modifier = Modifier
-                            .clip(RoundedCornerShape(4.dp))
-                            .background(BrandPurple.copy(alpha = 0.88f))
-                            .padding(horizontal = 8.dp, vertical = 3.dp),
-                    ) {
-                        Text(
-                            text = fmt,
-                            style = MaterialTheme.typography.labelSmall,
-                            fontWeight = FontWeight.SemiBold,
-                            color = Color.White,
-                        )
-                    }
-                    Spacer(Modifier.height(6.dp))
-                }
-                Text(
-                    text = item.title,
-                    style = MaterialTheme.typography.headlineSmall,
-                    fontWeight = FontWeight.Bold,
-                    color = Color.White,
-                    maxLines = 2,
-                    overflow = TextOverflow.Ellipsis,
-                )
-                Spacer(Modifier.height(10.dp))
-                Button(
-                    onClick = { onClickItem(item) },
-                    shape = RoundedCornerShape(50),
-                    colors = ButtonDefaults.buttonColors(
-                        containerColor = Color.White,
-                        contentColor = BrandPurple,
-                    ),
-                ) {
-                    Text("Start Reading", fontWeight = FontWeight.Bold)
+                            .size(if (selected) 8.dp else 5.dp)
+                            .clip(CircleShape)
+                            .background(
+                                if (selected) Color.White else Color.White.copy(alpha = 0.45f),
+                            ),
+                    )
                 }
             }
-        } else if (state is ResultsState.Loading) {
-            CircularProgressIndicator(
-                modifier = Modifier.align(Alignment.Center),
-                color = BrandPurple,
+        }
+    }
+}
+
+@Composable
+private fun HeroBannerPage(item: AnilistSuggestionItem, onClick: () -> Unit) {
+    Box(
+        modifier = Modifier
+            .fillMaxSize()
+            .clickable(onClick = onClick),
+    ) {
+        AsyncImage(
+            model = item.coverUrl,
+            contentDescription = item.title,
+            contentScale = ContentScale.Crop,
+            modifier = Modifier.fillMaxSize(),
+        )
+        // Dark gradient overlay
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .background(
+                    Brush.verticalGradient(
+                        0.0f to Color.Transparent,
+                        0.30f to Color.Transparent,
+                        1.0f to Color.Black.copy(alpha = 0.92f),
+                    ),
+                ),
+        )
+        Column(
+            modifier = Modifier
+                .align(Alignment.BottomStart)
+                .padding(start = 16.dp, end = 16.dp, bottom = 28.dp),
+        ) {
+            // Format badge
+            item.format?.let { fmt ->
+                Box(
+                    modifier = Modifier
+                        .clip(RoundedCornerShape(4.dp))
+                        .background(BrandPurple.copy(alpha = 0.88f))
+                        .padding(horizontal = 8.dp, vertical = 3.dp),
+                ) {
+                    Text(
+                        text = fmt,
+                        style = MaterialTheme.typography.labelSmall,
+                        fontWeight = FontWeight.SemiBold,
+                        color = Color.White,
+                    )
+                }
+                Spacer(Modifier.height(6.dp))
+            }
+            Text(
+                text = item.title,
+                style = MaterialTheme.typography.headlineSmall,
+                fontWeight = FontWeight.Bold,
+                color = Color.White,
+                maxLines = 2,
+                overflow = TextOverflow.Ellipsis,
             )
+            Spacer(Modifier.height(10.dp))
+            Button(
+                onClick = onClick,
+                shape = RoundedCornerShape(50),
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = Color.White,
+                    contentColor = BrandPurple,
+                ),
+            ) {
+                Text("Start Reading", fontWeight = FontWeight.Bold)
+            }
         }
     }
 }
