@@ -121,8 +121,8 @@ object HomeScreen : Screen() {
         MoreTab,
     )
 
-    private val BOTTOM_NAV_TABS = listOf(LibraryTab, SuggestionsTab, ExploreTab, MoreTab)
-    private val FLOATING_TABS   = listOf(UpdatesTab, HistoryTab, BrowseTab)
+    private val BOTTOM_NAV_TABS = listOf(LibraryTab, SuggestionsTab, ExploreTab, BrowseTab, MoreTab)
+    private val FLOATING_TABS   = listOf(UpdatesTab, HistoryTab)
 
     @Composable
     override fun Content() {
@@ -331,13 +331,6 @@ object HomeScreen : Screen() {
                 if (count > 0 && activeTab == null) {
                     Badge { Text(count.toString()) }
                 }
-            }
-            BrowseTab::class.isInstance(activeTab) -> {
-                val count by produceState(initialValue = 0) {
-                    Injekt.get<SourcePreferences>().extensionUpdatesCount.changes()
-                        .collectLatest { value = it }
-                }
-                if (count > 0) Badge { Text(count.toString()) }
             }
         }
     }
