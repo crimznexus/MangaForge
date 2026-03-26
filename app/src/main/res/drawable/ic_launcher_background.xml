@@ -5,18 +5,17 @@
     android:height="108dp"
     android:viewportWidth="432"
     android:viewportHeight="432">
-    <!-- Rounded-rect background matching the new logo's blue→purple gradient -->
-    <path android:pathData="M80,0h272a80,80 0,0 1,80 80l0,272a80,80 0,0 1,-80 80l-272,0a80,80 0,0 1,-80 -80l0,-272a80,80 0,0 1,80 -80z">
-        <aapt:attr name="android:fillColor">
-            <gradient
-                android:startX="0"
-                android:startY="432"
-                android:endX="432"
-                android:endY="0"
-                android:type="linear">
-                <item android:offset="0"   android:color="#FF6A8EF6"/>
-                <item android:offset="1"   android:color="#FF7B3FE4"/>
-            </gradient>
-        </aapt:attr>
-    </path>
+  <path android:pathData="M0,0h432v432h-432z">
+    <aapt:attr name="android:fillColor">
+      <gradient
+          android:startX="0"
+          android:startY="0"
+          android:endX="432"
+          android:endY="432"
+          android:type="linear">
+        <item android:offset="0"   android:color="#FF8477FF"/>
+        <item android:offset="1"   android:color="#FF5A18C0"/>
+      </gradient>
+    </aapt:attr>
+  </path>
 </vector>
