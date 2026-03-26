@@ -27,8 +27,9 @@ import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.outlined.Refresh
 import androidx.compose.material.icons.outlined.Tune
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.pulltorefresh.PullToRefreshBox
 import androidx.compose.material3.Badge
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
@@ -83,6 +84,7 @@ private val SelectedGradient = listOf(BrandPurple, BrandViolet)
 
 object SuggestionsScreen : Screen() {
 
+    @OptIn(ExperimentalMaterial3Api::class)
     @Composable
     override fun Content() {
         val navigator = LocalNavigator.currentOrThrow
@@ -109,7 +111,6 @@ object SuggestionsScreen : Screen() {
                 GradientHeader(
                     selectedTab  = state.selectedTab,
                     onSelectTab  = screenModel::selectTab,
-                    onRefresh    = screenModel::refresh,
                     onOpenFilters = screenModel::openFilters,
                 )
             },
@@ -120,9 +121,14 @@ object SuggestionsScreen : Screen() {
                     contentAlignment = Alignment.Center,
                 ) { CircularProgressIndicator(color = BrandPurple) }
             } else {
+                PullToRefreshBox(
+                    isRefreshing = state.isRefreshing,
+                    onRefresh = screenModel::refresh,
+                    modifier = Modifier.fillMaxSize().padding(paddingValues),
+                ) {
                 LazyVerticalGrid(
                     columns = GridCells.Adaptive(minSize = 110.dp),
-                    modifier = Modifier.fillMaxSize().padding(paddingValues),
+                    modifier = Modifier.fillMaxSize(),
                     contentPadding = PaddingValues(start = 12.dp, end = 12.dp, bottom = 32.dp),
                     verticalArrangement = Arrangement.spacedBy(10.dp),
                     horizontalArrangement = Arrangement.spacedBy(10.dp),
@@ -234,6 +240,7 @@ object SuggestionsScreen : Screen() {
                         }
                     }
                 }
+                } // end PullToRefreshBox
             }
         }
 
@@ -260,7 +267,6 @@ object SuggestionsScreen : Screen() {
 private fun GradientHeader(
     selectedTab: Int,
     onSelectTab: (Int) -> Unit,
-    onRefresh: () -> Unit,
     onOpenFilters: () -> Unit,
 ) {
     Box(
@@ -291,21 +297,12 @@ private fun GradientHeader(
                         color = Color.White.copy(alpha = 0.75f),
                     )
                 }
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                    IconButton(onClick = onRefresh) {
-                        Icon(
-                            Icons.Outlined.Refresh,
-                            contentDescription = "Refresh",
-                            tint = Color.White,
-                        )
-                    }
-                    IconButton(onClick = onOpenFilters) {
-                        Icon(
-                            Icons.Outlined.Tune,
-                            contentDescription = "Filters",
-                            tint = Color.White,
-                        )
-                    }
+                IconButton(onClick = onOpenFilters) {
+                    Icon(
+                        Icons.Outlined.Tune,
+                        contentDescription = "Filters",
+                        tint = Color.White,
+                    )
                 }
             }
             Spacer(Modifier.height(16.dp))

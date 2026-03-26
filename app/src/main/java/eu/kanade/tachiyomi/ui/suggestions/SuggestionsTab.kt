@@ -13,7 +13,7 @@ data object SuggestionsTab : Tab {
     override val options: TabOptions
         @Composable
         get() = TabOptions(
-            index = 2u,
+            index = 0u,
             title = "Discover",
             icon = rememberVectorPainter(Icons.Outlined.AutoAwesome),
         )

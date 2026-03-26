@@ -99,12 +99,7 @@ class SuggestionsScreenModel(
     // ── Public actions ────────────────────────────────────────────────────────
 
     fun refresh() {
-        mutableState.update {
-            it.copy(
-                genresLoading = true,
-                errorMessage = null,
-            )
-        }
+        mutableState.update { it.copy(isRefreshing = true, errorMessage = null) }
         initializeContent()
     }
 
@@ -170,6 +165,7 @@ class SuggestionsScreenModel(
                 it.copy(
                     availableGenres = genres,
                     genresLoading = false,
+                    isRefreshing = false,
                     errorMessage = null,
                 )
             }
@@ -413,6 +409,7 @@ class SuggestionsScreenModel(
     data class State(
         val availableGenres: List<String> = emptyList(),
         val genresLoading: Boolean = true,
+        val isRefreshing: Boolean = false,
         val selectedTab: Int = 0,
         val filtersSheetOpen: Boolean = false,
 

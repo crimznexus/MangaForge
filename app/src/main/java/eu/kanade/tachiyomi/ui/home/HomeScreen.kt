@@ -121,14 +121,14 @@ object HomeScreen : Screen() {
         MoreTab,
     )
 
-    private val BOTTOM_NAV_TABS = listOf(LibraryTab, SuggestionsTab, ExploreTab, BrowseTab, MoreTab)
+    private val BOTTOM_NAV_TABS = listOf(SuggestionsTab, LibraryTab, ExploreTab, BrowseTab, MoreTab)
     private val FLOATING_TABS   = listOf(UpdatesTab, HistoryTab)
 
     @Composable
     override fun Content() {
         val navigator = LocalNavigator.currentOrThrow
         TabNavigator(
-            tab = LibraryTab,
+            tab = SuggestionsTab,
             key = TabNavigatorKey,
         ) { tabNavigator ->
             CompositionLocalProvider(LocalNavigator provides navigator) {
@@ -193,7 +193,8 @@ object HomeScreen : Screen() {
             }
 
             val goToLibraryTab = { tabNavigator.current = LibraryTab }
-            BackHandler(enabled = tabNavigator.current != LibraryTab, onBack = goToLibraryTab)
+            val goToDefaultTab = { tabNavigator.current = SuggestionsTab }
+            BackHandler(enabled = tabNavigator.current != SuggestionsTab, onBack = goToDefaultTab)
 
             LaunchedEffect(Unit) {
                 launch {
