@@ -40,8 +40,10 @@ data class ALSuggestionMedia(
     val id: Int,
     val title: ALSuggestionTitle,
     val coverImage: ALSuggestionCoverImage,
+    val bannerImage: String? = null,
     val averageScore: Int? = null,
     val format: String? = null,
+    val isAdult: Boolean = false,
 )
 
 @Serializable
@@ -64,6 +66,7 @@ data class AnilistSuggestionItem(
     val id: Int,
     val title: String,
     val coverUrl: String,
+    val bannerUrl: String? = null,
     val score: Int?,
     val format: String?,
 )
@@ -326,11 +329,13 @@ class SuggestionsScreenModel(
                       format: $format,
                       genre_in: $genreIn,
                       seasonYear: $seasonYear,
-                      format_not_in: [NOVEL]
+                      format_not_in: [NOVEL],
+                      isAdult: false
                     ) {
                       id
                       title { userPreferred english romaji }
                       coverImage { large }
+                      bannerImage
                       averageScore
                       format
                     }
@@ -396,6 +401,7 @@ class SuggestionsScreenModel(
                             ?: it.title.romaji?.takeIf { t -> t.isNotBlank() }
                             ?: it.title.userPreferred,
                         coverUrl = it.coverImage.large,
+                        bannerUrl = it.bannerImage,
                         score = it.averageScore,
                         format = it.format,
                     )

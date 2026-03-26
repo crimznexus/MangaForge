@@ -2,6 +2,8 @@ package eu.kanade.tachiyomi.ui.suggestions
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -58,6 +60,8 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.graphicsLayer
+import kotlin.math.abs
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
@@ -68,7 +72,6 @@ import cafe.adriel.voyager.navigator.currentOrThrow
 import coil3.compose.AsyncImage
 import eu.kanade.presentation.manga.components.MangaCover
 import eu.kanade.presentation.util.Screen
-import eu.kanade.tachiyomi.ui.browse.source.globalsearch.GlobalSearchScreen
 import tachiyomi.presentation.core.components.material.Scaffold
 import java.time.Year
 
@@ -108,7 +111,15 @@ object SuggestionsScreen : Screen() {
         var trendingOrPopular by remember(state.selectedTab) { mutableStateOf(0) }
 
         val onClickItem: (AnilistSuggestionItem) -> Unit = { item ->
-            navigator.push(GlobalSearchScreen(searchQuery = item.title))
+            navigator.push(
+                MangaDetailScreen(
+                    itemId = item.id,
+                    itemTitle = item.title,
+                    itemCoverUrl = item.coverUrl,
+                    itemScore = item.score,
+                    itemFormat = item.format,
+                ),
+            )
         }
 
         Scaffold(
@@ -352,7 +363,6 @@ private fun HeroBanner(
     val items = (state as? ResultsState.Success)?.items?.take(8) ?: emptyList()
     val pagerState = rememberPagerState(pageCount = { maxOf(items.size, 1) })
 
-    // Auto-advance every 4 seconds
     if (items.size > 1) {
         LaunchedEffect(pagerState) {
             while (true) {
@@ -367,24 +377,35 @@ private fun HeroBanner(
     Box(
         modifier = modifier
             .fillMaxWidth()
-            .height(320.dp)
+            .height(210.dp)
             .clip(MaterialTheme.shapes.large)
             .background(MaterialTheme.colorScheme.surfaceVariant),
     ) {
         if (items.isEmpty()) {
             if (state is ResultsState.Loading) {
-                CircularProgressIndicator(
-                    modifier = Modifier.align(Alignment.Center),
-                    color = BrandPurple,
-                )
+                CircularProgressIndicator(modifier = Modifier.align(Alignment.Center), color = BrandPurple)
             }
         } else {
+            // Background: current item's image darkened — fills the peek gaps on both sides
+            val bgItem = items[pagerState.currentPage.coerceIn(items.indices)]
+            AsyncImage(
+                model = bgItem.bannerUrl ?: bgItem.coverUrl,
+                contentDescription = null,
+                contentScale = ContentScale.Crop,
+                modifier = Modifier.fillMaxSize(),
+            )
+            Box(Modifier.fillMaxSize().background(Color.Black.copy(alpha = 0.60f)))
+
+            // Pager: adjacent cards peek 28 dp on each side
             HorizontalPager(
                 state = pagerState,
                 modifier = Modifier.fillMaxSize(),
+                contentPadding = PaddingValues(horizontal = 28.dp),
+                pageSpacing = 8.dp,
             ) { page ->
                 val item = items[page]
-                HeroBannerPage(item = item, onClick = { onClickItem(item) })
+                val offset = abs((pagerState.currentPage - page) + pagerState.currentPageOffsetFraction)
+                HeroBannerPage(item = item, pageOffset = offset, onClick = { onClickItem(item) })
             }
 
             // Accent strip
@@ -400,7 +421,7 @@ private fun HeroBanner(
             Row(
                 modifier = Modifier
                     .align(Alignment.BottomCenter)
-                    .padding(bottom = 10.dp),
+                    .padding(bottom = 8.dp),
                 horizontalArrangement = Arrangement.spacedBy(5.dp),
                 verticalAlignment = Alignment.CenterVertically,
             ) {
@@ -408,11 +429,9 @@ private fun HeroBanner(
                     val selected = pagerState.currentPage == index
                     Box(
                         modifier = Modifier
-                            .size(if (selected) 8.dp else 5.dp)
+                            .size(if (selected) 7.dp else 4.dp)
                             .clip(CircleShape)
-                            .background(
-                                if (selected) Color.White else Color.White.copy(alpha = 0.45f),
-                            ),
+                            .background(if (selected) Color.White else Color.White.copy(alpha = 0.45f)),
                     )
                 }
             }
@@ -421,71 +440,60 @@ private fun HeroBanner(
 }
 
 @Composable
-private fun HeroBannerPage(item: AnilistSuggestionItem, onClick: () -> Unit) {
+private fun HeroBannerPage(item: AnilistSuggestionItem, pageOffset: Float, onClick: () -> Unit) {
     Box(
         modifier = Modifier
             .fillMaxSize()
+            // Fade + very slight vertical shrink for non-current cards
+            .graphicsLayer {
+                alpha = 1f - pageOffset.coerceIn(0f, 1f) * 0.55f
+                scaleY = 1f - pageOffset.coerceIn(0f, 1f) * 0.05f
+            }
+            .clip(RoundedCornerShape(10.dp))
             .clickable(onClick = onClick),
     ) {
         AsyncImage(
-            model = item.coverUrl,
+            model = item.bannerUrl ?: item.coverUrl,
             contentDescription = item.title,
             contentScale = ContentScale.Crop,
             modifier = Modifier.fillMaxSize(),
         )
-        // Dark gradient overlay
+        // Bottom gradient for text legibility
         Box(
             modifier = Modifier
                 .fillMaxSize()
                 .background(
                     Brush.verticalGradient(
                         0.0f to Color.Transparent,
-                        0.30f to Color.Transparent,
-                        1.0f to Color.Black.copy(alpha = 0.92f),
+                        0.50f to Color.Transparent,
+                        1.0f to Color.Black.copy(alpha = 0.88f),
                     ),
                 ),
         )
         Column(
             modifier = Modifier
                 .align(Alignment.BottomStart)
-                .padding(start = 16.dp, end = 16.dp, bottom = 28.dp),
+                .padding(start = 12.dp, end = 12.dp, bottom = 20.dp),
+            verticalArrangement = Arrangement.spacedBy(4.dp),
         ) {
-            // Format badge
             item.format?.let { fmt ->
                 Box(
                     modifier = Modifier
                         .clip(RoundedCornerShape(4.dp))
                         .background(BrandPurple.copy(alpha = 0.88f))
-                        .padding(horizontal = 8.dp, vertical = 3.dp),
+                        .padding(horizontal = 7.dp, vertical = 2.dp),
                 ) {
-                    Text(
-                        text = fmt,
-                        style = MaterialTheme.typography.labelSmall,
-                        fontWeight = FontWeight.SemiBold,
-                        color = Color.White,
-                    )
+                    Text(fmt, style = MaterialTheme.typography.labelSmall, fontWeight = FontWeight.SemiBold, color = Color.White)
                 }
-                Spacer(Modifier.height(6.dp))
             }
             Text(
                 text = item.title,
-                style = MaterialTheme.typography.headlineSmall,
+                style = MaterialTheme.typography.titleSmall,
                 fontWeight = FontWeight.Bold,
                 color = Color.White,
                 maxLines = 2,
                 overflow = TextOverflow.Ellipsis,
             )
-            Spacer(Modifier.height(10.dp))
-            Button(
-                onClick = onClick,
-                shape = RoundedCornerShape(50),
-                colors = ButtonDefaults.buttonColors(
-                    containerColor = Color.White,
-                    contentColor = BrandPurple,
-                ),
-            ) {
-                Text("Start Reading", fontWeight = FontWeight.Bold)
-            }
         }
     }
 }
@@ -799,7 +807,11 @@ private fun FiltersBottomSheet(
     onToggleGenre: (String) -> Unit,
 ) {
     ModalBottomSheet(onDismissRequest = onDismiss) {
-        Column(modifier = Modifier.padding(horizontal = 16.dp)) {
+        Column(
+            modifier = Modifier
+                .verticalScroll(rememberScrollState())
+                .padding(horizontal = 16.dp),
+        ) {
             Text(
                 text = "Filters",
                 style = MaterialTheme.typography.titleLarge,
