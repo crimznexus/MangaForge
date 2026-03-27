@@ -26,7 +26,7 @@ Built with Kotlin + Jetpack Compose · Based on [Mihon](https://github.com/mihon
 - Chapter download for offline reading
 - Tracking integration (AniList, MyAnimeList, and more)
 - Extension repository support to install community sources
-- Material You dynamic theming + AMOLED mode
+- Material You dynamic theming + OLED dark mode (default)
 
 ## Download
 

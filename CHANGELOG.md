@@ -10,6 +10,13 @@ The format is a modified version of [Keep a Changelog](https://keepachangelog.co
 - `Fixed` - for any bug fixes.
 - `Other` - for technical stuff.
 
+## [v1.3.0] - 2026-03-27
+### Changed
+- Complete rebranding to **MangaForge**.
+- Updated app icon and splash screen.
+- Set OLED dark mode as the default theme.
+- Updated package identity to `io.mangaforge`.
+
 ## [Unreleased]
 
 ## [v0.19.5] - 2026-03-20

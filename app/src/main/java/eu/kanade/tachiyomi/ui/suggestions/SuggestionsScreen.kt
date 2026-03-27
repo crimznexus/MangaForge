@@ -14,6 +14,7 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
@@ -21,16 +22,25 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.wrapContentHeight
+import androidx.compose.animation.core.AnimationEndReason
+import androidx.compose.animation.core.FastOutSlowInEasing
+import androidx.compose.animation.core.spring
+import androidx.compose.animation.core.tween
+import androidx.compose.foundation.gestures.detectHorizontalDragGestures
+import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.lazy.LazyRow
+import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.itemsIndexed
+import androidx.compose.foundation.pager.HorizontalPager
+import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.GridItemSpan
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
-import androidx.compose.foundation.pager.HorizontalPager
-import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.Tune
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -47,22 +57,31 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
+import androidx.compose.animation.core.Animatable
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
-import kotlinx.coroutines.delay
+import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.layout.onSizeChanged
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.clipToBounds
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.graphicsLayer
-import kotlin.math.abs
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.util.lerp
+import kotlin.math.abs
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.isActive
+import kotlinx.coroutines.launch
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
@@ -98,17 +117,17 @@ object SuggestionsScreen : Screen() {
         val navigator = LocalNavigator.currentOrThrow
         val screenModel = rememberScreenModel { SuggestionsScreenModel() }
         val state by screenModel.state.collectAsState()
+        val scope = rememberCoroutineScope()
 
-        val featuredState = if (state.selectedTab == 0) state.mangaFeatured  else state.manhwaFeatured
-        val trendingState = if (state.selectedTab == 0) state.mangaTrending  else state.manhwaTrending
-        val popularState  = if (state.selectedTab == 0) state.mangaPopular   else state.manhwaPopular
-        val newState      = if (state.selectedTab == 0) state.mangaNew       else state.manhwaNew
-        val topRatedState = if (state.selectedTab == 0) state.mangaTopRated  else state.manhwaTopRated
-        val resultsState  = if (state.selectedTab == 0) state.mangaResults   else state.manhwaResults
-        val applied       = if (state.selectedTab == 0) state.appliedManga   else state.appliedManhwa
-        val draft         = if (state.selectedTab == 0) state.draftManga     else state.draftManhwa
+        // Pager is the source of truth for the active tab
+        val pagerState = rememberPagerState(pageCount = { 2 })
+        // Disable pager swipe while the hero carousel is being dragged
+        var isCarouselDragging by remember { mutableStateOf(false) }
 
-        var trendingOrPopular by remember(state.selectedTab) { mutableStateOf(0) }
+        // Keep ScreenModel in sync so it loads data for the right tab
+        LaunchedEffect(pagerState.currentPage) {
+            screenModel.selectTab(pagerState.currentPage)
+        }
 
         val onClickItem: (AnilistSuggestionItem) -> Unit = { item ->
             navigator.push(
@@ -125,8 +144,8 @@ object SuggestionsScreen : Screen() {
         Scaffold(
             topBar = {
                 GradientHeader(
-                    selectedTab  = state.selectedTab,
-                    onSelectTab  = screenModel::selectTab,
+                    selectedTab   = pagerState.currentPage,
+                    onSelectTab   = { scope.launch { pagerState.animateScrollToPage(it) } },
                     onOpenFilters = screenModel::openFilters,
                 )
             },
@@ -137,130 +156,150 @@ object SuggestionsScreen : Screen() {
                     contentAlignment = Alignment.Center,
                 ) { CircularProgressIndicator(color = BrandPurple) }
             } else {
-                PullToRefreshBox(
-                    isRefreshing = state.isRefreshing,
-                    onRefresh = screenModel::refresh,
+                // Tab swipe — each page is an independent scroll container
+                HorizontalPager(
+                    state = pagerState,
                     modifier = Modifier.fillMaxSize().padding(paddingValues),
-                ) {
-                LazyVerticalGrid(
-                    columns = GridCells.Adaptive(minSize = 110.dp),
-                    modifier = Modifier.fillMaxSize(),
-                    contentPadding = PaddingValues(start = 12.dp, end = 12.dp, bottom = 32.dp),
-                    verticalArrangement = Arrangement.spacedBy(10.dp),
-                    horizontalArrangement = Arrangement.spacedBy(10.dp),
-                ) {
-                    // ── Hero ─────────────────────────────────────────────
-                    item(key = "hero", span = { GridItemSpan(maxLineSpan) }) {
-                        HeroBanner(
-                            state = featuredState,
-                            onClickItem = onClickItem,
-                            modifier = Modifier.padding(top = 16.dp),
-                        )
-                    }
+                    userScrollEnabled = !isCarouselDragging,
+                    beyondViewportPageCount = 1,
+                ) { page ->
+                    val featuredState = if (page == 0) state.mangaFeatured  else state.manhwaFeatured
+                    val trendingState = if (page == 0) state.mangaTrending  else state.manhwaTrending
+                    val popularState  = if (page == 0) state.mangaPopular   else state.manhwaPopular
+                    val newState      = if (page == 0) state.mangaNew       else state.manhwaNew
+                    val topRatedState = if (page == 0) state.mangaTopRated  else state.manhwaTopRated
+                    val resultsState  = if (page == 0) state.mangaResults   else state.manhwaResults
+                    val applied       = if (page == 0) state.appliedManga   else state.appliedManhwa
 
-                    // ── Trending & Popular ────────────────────────────────
-                    item(key = "trending_section", span = { GridItemSpan(maxLineSpan) }) {
-                        Column {
-                            ContentSectionHeader(
-                                title = "Trending & Popular",
-                                modifier = Modifier.padding(top = 20.dp, bottom = 12.dp),
-                            )
-                            PillToggle(
-                                options  = listOf("Trending", "Popular"),
-                                selected = trendingOrPopular,
-                                onSelect = { trendingOrPopular = it },
-                            )
-                            Spacer(Modifier.height(12.dp))
-                            RankedCoverRow(
-                                state = if (trendingOrPopular == 0) trendingState else popularState,
+                    var trendingOrPopular by remember { mutableStateOf(0) }
+
+                    PullToRefreshBox(
+                        isRefreshing = state.isRefreshing,
+                        onRefresh = screenModel::refresh,
+                        modifier = Modifier.fillMaxSize(),
+                    ) {
+                    LazyVerticalGrid(
+                        columns = GridCells.Adaptive(minSize = 110.dp),
+                        modifier = Modifier.fillMaxSize(),
+                        contentPadding = PaddingValues(start = 12.dp, end = 12.dp, bottom = 32.dp),
+                        verticalArrangement = Arrangement.spacedBy(10.dp),
+                        horizontalArrangement = Arrangement.spacedBy(10.dp),
+                    ) {
+                        // ── Hero ─────────────────────────────────────────────
+                        item(key = "hero", span = { GridItemSpan(maxLineSpan) }) {
+                            HeroBanner(
+                                state = featuredState,
                                 onClickItem = onClickItem,
+                                onDraggingChanged = { isCarouselDragging = it },
+                                modifier = Modifier.padding(top = 16.dp),
                             )
                         }
-                    }
 
-                    // ── Newly Released ────────────────────────────────────
-                    item(key = "new_section", span = { GridItemSpan(maxLineSpan) }) {
-                        Column {
-                            ContentSectionHeader(
-                                title = "Newly Released",
-                                modifier = Modifier.padding(top = 20.dp, bottom = 12.dp),
-                            )
-                            HorizontalCoverRow(state = newState, onClickItem = onClickItem)
+                        // ── Trending & Popular ────────────────────────────────
+                        item(key = "trending_section", span = { GridItemSpan(maxLineSpan) }) {
+                            Column {
+                                ContentSectionHeader(
+                                    title = "Trending & Popular",
+                                    modifier = Modifier.padding(top = 20.dp, bottom = 12.dp),
+                                )
+                                PillToggle(
+                                    options  = listOf("Trending", "Popular"),
+                                    selected = trendingOrPopular,
+                                    onSelect = { trendingOrPopular = it },
+                                )
+                                Spacer(Modifier.height(12.dp))
+                                RankedCoverRow(
+                                    state = if (trendingOrPopular == 0) trendingState else popularState,
+                                    onClickItem = onClickItem,
+                                )
+                            }
                         }
-                    }
 
-                    // ── Top Rated ─────────────────────────────────────────
-                    item(key = "toprated_section", span = { GridItemSpan(maxLineSpan) }) {
-                        Column {
-                            ContentSectionHeader(
-                                title = "Top Rated",
-                                modifier = Modifier.padding(top = 20.dp, bottom = 12.dp),
-                            )
-                            HorizontalCoverRow(state = topRatedState, onClickItem = onClickItem)
+                        // ── Newly Released ────────────────────────────────────
+                        item(key = "new_section", span = { GridItemSpan(maxLineSpan) }) {
+                            Column {
+                                ContentSectionHeader(
+                                    title = "Newly Released",
+                                    modifier = Modifier.padding(top = 20.dp, bottom = 12.dp),
+                                )
+                                HorizontalCoverRow(state = newState, onClickItem = onClickItem)
+                            }
                         }
-                    }
 
-                    // ── Browse ────────────────────────────────────────────
-                    item(key = "browse_header", span = { GridItemSpan(maxLineSpan) }) {
-                        Column {
-                            Row(
-                                modifier = Modifier.fillMaxWidth().padding(top = 20.dp),
-                                horizontalArrangement = Arrangement.SpaceBetween,
-                                verticalAlignment = Alignment.CenterVertically,
+                        // ── Top Rated ─────────────────────────────────────────
+                        item(key = "toprated_section", span = { GridItemSpan(maxLineSpan) }) {
+                            Column {
+                                ContentSectionHeader(
+                                    title = "Top Rated",
+                                    modifier = Modifier.padding(top = 20.dp, bottom = 12.dp),
+                                )
+                                HorizontalCoverRow(state = topRatedState, onClickItem = onClickItem)
+                            }
+                        }
+
+                        // ── Browse ────────────────────────────────────────────
+                        item(key = "browse_header", span = { GridItemSpan(maxLineSpan) }) {
+                            Column {
+                                Row(
+                                    modifier = Modifier.fillMaxWidth().padding(top = 20.dp),
+                                    horizontalArrangement = Arrangement.SpaceBetween,
+                                    verticalAlignment = Alignment.CenterVertically,
+                                ) {
+                                    ContentSectionHeader(title = "Browse")
+                                    TextButton(onClick = screenModel::openFilters) {
+                                        Icon(
+                                            Icons.Outlined.Tune,
+                                            contentDescription = null,
+                                            modifier = Modifier.size(16.dp),
+                                            tint = BrandPurple,
+                                        )
+                                        Spacer(Modifier.width(4.dp))
+                                        Text("Filters", color = BrandPurple)
+                                    }
+                                }
+                                AppliedFilterChipsRow(
+                                    applied = applied,
+                                    onOpenFilters = screenModel::openFilters,
+                                    modifier = Modifier.padding(vertical = 4.dp),
+                                )
+                                HorizontalDivider(modifier = Modifier.padding(top = 4.dp))
+                            }
+                        }
+
+                        when (resultsState) {
+                            is ResultsState.Loading -> item(
+                                key = "browse_loading",
+                                span = { GridItemSpan(maxLineSpan) },
                             ) {
-                                ContentSectionHeader(title = "Browse")
-                                TextButton(onClick = screenModel::openFilters) {
-                                    Icon(
-                                        Icons.Outlined.Tune,
-                                        contentDescription = null,
-                                        modifier = Modifier.size(16.dp),
-                                        tint = BrandPurple,
-                                    )
-                                    Spacer(Modifier.width(4.dp))
-                                    Text("Filters", color = BrandPurple)
-                                }
+                                Box(
+                                    modifier = Modifier.fillMaxWidth().height(200.dp),
+                                    contentAlignment = Alignment.Center,
+                                ) { CircularProgressIndicator(color = BrandPurple) }
                             }
-                            AppliedFilterChipsRow(
-                                applied = applied,
-                                onOpenFilters = screenModel::openFilters,
-                                modifier = Modifier.padding(vertical = 4.dp),
-                            )
-                            HorizontalDivider(modifier = Modifier.padding(top = 4.dp))
-                        }
-                    }
-
-                    when (resultsState) {
-                        is ResultsState.Loading -> item(
-                            key = "browse_loading",
-                            span = { GridItemSpan(maxLineSpan) },
-                        ) {
-                            Box(
-                                modifier = Modifier.fillMaxWidth().height(200.dp),
-                                contentAlignment = Alignment.Center,
-                            ) { CircularProgressIndicator(color = BrandPurple) }
-                        }
-                        is ResultsState.Error -> item(
-                            key = "browse_error",
-                            span = { GridItemSpan(maxLineSpan) },
-                        ) { ErrorRow(message = resultsState.message) }
-                        is ResultsState.Success -> {
-                            if (resultsState.items.isEmpty()) {
-                                item(key = "browse_empty", span = { GridItemSpan(maxLineSpan) }) {
-                                    EmptyRow()
-                                }
-                            } else {
-                                items(resultsState.items, key = { it.id }) { item ->
-                                    SuggestionCard(item = item, onClick = { onClickItem(item) })
+                            is ResultsState.Error -> item(
+                                key = "browse_error",
+                                span = { GridItemSpan(maxLineSpan) },
+                            ) { ErrorRow(message = resultsState.message) }
+                            is ResultsState.Success -> {
+                                if (resultsState.items.isEmpty()) {
+                                    item(key = "browse_empty", span = { GridItemSpan(maxLineSpan) }) {
+                                        EmptyRow()
+                                    }
+                                } else {
+                                    items(resultsState.items, key = { it.id }) { item ->
+                                        SuggestionCard(item = item, onClick = { onClickItem(item) })
+                                    }
                                 }
                             }
                         }
                     }
-                }
-                } // end PullToRefreshBox
+                    } // end PullToRefreshBox
+                }   // end HorizontalPager page
             }
         }
 
         if (state.filtersSheetOpen) {
+            val draft = if (pagerState.currentPage == 0) state.draftManga else state.draftManhwa
             FiltersBottomSheet(
                 draft          = draft,
                 availableGenres = state.availableGenres,
@@ -352,148 +391,288 @@ private fun GradientHeader(
     }
 }
 
-// ── Hero carousel ─────────────────────────────────────────────────────────────
+// ── Hero stacked carousel ─────────────────────────────────────────────────────
+//
+// Custom draw-order carousel: prev + next drawn first, current drawn last so it
+// always paints on top — no HorizontalPager z-ordering hacks needed.
 
 @Composable
 private fun HeroBanner(
     state: ResultsState,
     onClickItem: (AnilistSuggestionItem) -> Unit,
+    onDraggingChanged: (Boolean) -> Unit = {},
     modifier: Modifier = Modifier,
 ) {
-    val items = (state as? ResultsState.Success)?.items?.take(8) ?: emptyList()
-    val pagerState = rememberPagerState(pageCount = { maxOf(items.size, 1) })
+    val items = (state as? ResultsState.Success)?.items?.take(10) ?: emptyList()
 
-    if (items.size > 1) {
-        LaunchedEffect(pagerState) {
-            while (true) {
-                delay(4_000)
-                if (!pagerState.isScrollInProgress) {
-                    pagerState.animateScrollToPage((pagerState.currentPage + 1) % items.size)
+    if (items.isEmpty()) {
+        if (state is ResultsState.Loading) {
+            Box(
+                modifier = modifier.fillMaxWidth().height(300.dp),
+                contentAlignment = Alignment.Center,
+            ) { CircularProgressIndicator(color = BrandPurple) }
+        }
+        return
+    }
+
+    var currentIdx by remember { mutableStateOf(0) }
+    val scrollPos = remember { Animatable(0f) }
+    var isDragging by remember { mutableStateOf(false) }
+    val scope = rememberCoroutineScope()
+    // Width captured via onSizeChanged so pointerInput can live on the outer modifier
+    var containerWidthPx by remember { mutableStateOf(1f) }
+
+    LaunchedEffect(Unit) {
+        while (isActive) {
+            delay(4_000)
+            if (!isDragging) {
+                val r = scrollPos.animateTo(-1f, tween(420, easing = FastOutSlowInEasing))
+                if (r.endReason == AnimationEndReason.Finished) {
+                    currentIdx = (currentIdx + 1) % items.size
+                    scrollPos.snapTo(0f)
                 }
             }
         }
     }
 
-    Box(
+    BoxWithConstraints(
         modifier = modifier
             .fillMaxWidth()
-            .height(210.dp)
-            .clip(MaterialTheme.shapes.large)
-            .background(MaterialTheme.colorScheme.surfaceVariant),
+            .height(300.dp)
+            .clipToBounds()   // clip overflow so side cards don't bleed into adjacent pager page
+            .onSizeChanged { containerWidthPx = it.width.toFloat() }
+            .pointerInput(items.size) {
+                detectHorizontalDragGestures(
+                    onDragStart = {
+                        isDragging = true
+                        onDraggingChanged(true)
+                    },
+                    onDragCancel = {
+                        isDragging = false
+                        onDraggingChanged(false)
+                    },
+                    onDragEnd = {
+                        isDragging = false
+                        onDraggingChanged(false)
+                        val v = scrollPos.value
+                        scope.launch {
+                            when {
+                                v < -0.20f -> {
+                                    val r = scrollPos.animateTo(-1f, tween(280, easing = FastOutSlowInEasing))
+                                    if (r.endReason == AnimationEndReason.Finished) {
+                                        currentIdx = (currentIdx + 1) % items.size
+                                        scrollPos.snapTo(0f)
+                                    }
+                                }
+                                v > 0.20f -> {
+                                    val r = scrollPos.animateTo(1f, tween(280, easing = FastOutSlowInEasing))
+                                    if (r.endReason == AnimationEndReason.Finished) {
+                                        currentIdx = (currentIdx - 1 + items.size) % items.size
+                                        scrollPos.snapTo(0f)
+                                    }
+                                }
+                                else -> scrollPos.animateTo(0f, spring(dampingRatio = 0.72f, stiffness = 380f))
+                            }
+                        }
+                    },
+                    onHorizontalDrag = { _, delta ->
+                        val next = (scrollPos.value + delta / containerWidthPx).coerceIn(-1f, 1f)
+                        scope.launch { scrollPos.snapTo(next) }
+                    },
+                )
+            },
+        contentAlignment = Alignment.Center,
     ) {
-        if (items.isEmpty()) {
-            if (state is ResultsState.Loading) {
-                CircularProgressIndicator(modifier = Modifier.align(Alignment.Center), color = BrandPurple)
-            }
-        } else {
-            // Background: current item's image darkened — fills the peek gaps on both sides
-            val bgItem = items[pagerState.currentPage.coerceIn(items.indices)]
-            AsyncImage(
-                model = bgItem.bannerUrl ?: bgItem.coverUrl,
-                contentDescription = null,
-                contentScale = ContentScale.Crop,
-                modifier = Modifier.fillMaxSize(),
-            )
-            Box(Modifier.fillMaxSize().background(Color.Black.copy(alpha = 0.60f)))
 
-            // Pager: adjacent cards peek 28 dp on each side
-            HorizontalPager(
-                state = pagerState,
-                modifier = Modifier.fillMaxSize(),
-                contentPadding = PaddingValues(horizontal = 28.dp),
-                pageSpacing = 8.dp,
-            ) { page ->
-                val item = items[page]
-                val offset = abs((pagerState.currentPage - page) + pagerState.currentPageOffsetFraction)
-                HeroBannerPage(item = item, pageOffset = offset, onClick = { onClickItem(item) })
-            }
+        val cardWidth = maxWidth * 0.62f
+        // spacing between card centres — tight enough that side cards peek from behind centre
+        val spacing = maxWidth * 0.50f
+        val pos = scrollPos.value
 
-            // Accent strip
-            Box(
-                modifier = Modifier
-                    .align(Alignment.BottomStart)
-                    .fillMaxWidth()
-                    .height(3.dp)
-                    .background(Brush.linearGradient(AccentGradient)),
-            )
+        // Each card's normalised offset from screen centre (0 = centre, ±1 = ±spacing)
+        val prevNorm = -1f + pos   // pos=+1 → 0 (prev comes to centre)
+        val currNorm = pos         // pos=0  → 0 (resting at centre)
+        val nextNorm = 1f + pos    // pos=-1 → 0 (next comes to centre)
 
-            // Page indicator dots
-            Row(
-                modifier = Modifier
-                    .align(Alignment.BottomCenter)
-                    .padding(bottom = 8.dp),
-                horizontalArrangement = Arrangement.spacedBy(5.dp),
-                verticalAlignment = Alignment.CenterVertically,
-            ) {
-                repeat(items.size) { index ->
-                    val selected = pagerState.currentPage == index
-                    Box(
-                        modifier = Modifier
-                            .size(if (selected) 7.dp else 4.dp)
-                            .clip(CircleShape)
-                            .background(if (selected) Color.White else Color.White.copy(alpha = 0.45f)),
-                    )
-                }
+        fun scale(n: Float) = lerp(0.76f, 1.00f, 1f - abs(n).coerceIn(0f, 1f))
+        fun alpha(n: Float) = lerp(0.48f, 1.00f, 1f - abs(n).coerceIn(0f, 1f))
+        fun transY(n: Float) = lerp(22f, 0f, 1f - abs(n).coerceIn(0f, 1f)).dp
+        // Fan tilt: left card leans right (+), right card leans left (–)
+        fun rotZ(n: Float) = n.coerceIn(-1f, 1f) * (-4f)
+
+        val prevIdx = (currentIdx - 1 + items.size) % items.size
+        val nextIdx = (currentIdx + 1) % items.size
+
+        // Draw prev and next FIRST so current paints on top
+        CarouselCard(
+            item = items[prevIdx],
+            cardWidth = cardWidth,
+            offsetX = spacing * prevNorm,
+            scale = scale(prevNorm),
+            alpha = alpha(prevNorm),
+            transY = transY(prevNorm),
+            rotZ = rotZ(prevNorm),
+            isFront = false,
+            onClick = {},
+        )
+        CarouselCard(
+            item = items[nextIdx],
+            cardWidth = cardWidth,
+            offsetX = spacing * nextNorm,
+            scale = scale(nextNorm),
+            alpha = alpha(nextNorm),
+            transY = transY(nextNorm),
+            rotZ = rotZ(nextNorm),
+            isFront = false,
+            onClick = {},
+        )
+        // Current card — drawn last, always on top
+        CarouselCard(
+            item = items[currentIdx],
+            cardWidth = cardWidth,
+            offsetX = spacing * currNorm,
+            scale = scale(currNorm),
+            alpha = alpha(currNorm),
+            transY = transY(currNorm),
+            rotZ = rotZ(currNorm),
+            isFront = true,
+            onClick = { if (abs(pos) < 0.08f) onClickItem(items[currentIdx]) },
+        )
+
+        // Page dots
+        Row(
+            modifier = Modifier
+                .align(Alignment.BottomCenter)
+                .padding(bottom = 8.dp),
+            horizontalArrangement = Arrangement.spacedBy(5.dp),
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            repeat(items.size) { i ->
+                val sel = i == currentIdx
+                Box(
+                    modifier = Modifier
+                        .size(if (sel) 7.dp else 4.dp)
+                        .clip(CircleShape)
+                        .background(if (sel) Color.White else Color.White.copy(alpha = 0.38f)),
+                )
             }
         }
     }
 }
 
 @Composable
-private fun HeroBannerPage(item: AnilistSuggestionItem, pageOffset: Float, onClick: () -> Unit) {
-    Box(
+private fun CarouselCard(
+    item: AnilistSuggestionItem,
+    cardWidth: Dp,
+    offsetX: Dp,
+    scale: Float,
+    alpha: Float,
+    transY: Dp,
+    rotZ: Float,
+    isFront: Boolean,
+    onClick: () -> Unit,
+) {
+    Card(
+        onClick = onClick,
         modifier = Modifier
-            .fillMaxSize()
-            // Fade + very slight vertical shrink for non-current cards
+            .width(cardWidth)
+            .fillMaxHeight(0.91f)
             .graphicsLayer {
-                alpha = 1f - pageOffset.coerceIn(0f, 1f) * 0.55f
-                scaleY = 1f - pageOffset.coerceIn(0f, 1f) * 0.05f
-            }
-            .clip(RoundedCornerShape(10.dp))
-            .clickable(onClick = onClick),
+                translationX = offsetX.toPx()
+                translationY = transY.toPx()
+                scaleX = scale
+                scaleY = scale
+                this.alpha = alpha
+                rotationZ = rotZ
+            },
+        shape = RoundedCornerShape(16.dp),
+        elevation = CardDefaults.cardElevation(defaultElevation = if (isFront) 18.dp else 4.dp),
     ) {
-        AsyncImage(
-            model = item.bannerUrl ?: item.coverUrl,
-            contentDescription = item.title,
-            contentScale = ContentScale.Crop,
-            modifier = Modifier.fillMaxSize(),
-        )
-        // Bottom gradient for text legibility
-        Box(
-            modifier = Modifier
-                .fillMaxSize()
-                .background(
-                    Brush.verticalGradient(
-                        0.0f to Color.Transparent,
-                        0.50f to Color.Transparent,
-                        1.0f to Color.Black.copy(alpha = 0.88f),
-                    ),
-                ),
-        )
-        Column(
-            modifier = Modifier
-                .align(Alignment.BottomStart)
-                .padding(start = 12.dp, end = 12.dp, bottom = 20.dp),
-            verticalArrangement = Arrangement.spacedBy(4.dp),
-        ) {
-            item.format?.let { fmt ->
+        Box(modifier = Modifier.fillMaxSize()) {
+            AsyncImage(
+                model = item.coverUrl,
+                contentDescription = item.title,
+                contentScale = ContentScale.Crop,
+                modifier = Modifier.fillMaxSize(),
+            )
+            if (isFront) {
+                // Gradient scrim + title text on the front card only
                 Box(
                     modifier = Modifier
-                        .clip(RoundedCornerShape(4.dp))
-                        .background(BrandPurple.copy(alpha = 0.88f))
-                        .padding(horizontal = 7.dp, vertical = 2.dp),
+                        .fillMaxSize()
+                        .background(
+                            Brush.verticalGradient(
+                                0f to Color.Transparent,
+                                0.52f to Color.Transparent,
+                                1f to Color.Black.copy(alpha = 0.88f),
+                            ),
+                        ),
+                )
+                Column(
+                    modifier = Modifier
+                        .align(Alignment.BottomStart)
+                        .padding(start = 14.dp, end = 14.dp, bottom = 16.dp),
+                    verticalArrangement = Arrangement.spacedBy(5.dp),
                 ) {
-                    Text(fmt, style = MaterialTheme.typography.labelSmall, fontWeight = FontWeight.SemiBold, color = Color.White)
+                    item.format?.let { fmt ->
+                        Box(
+                            modifier = Modifier
+                                .clip(RoundedCornerShape(4.dp))
+                                .background(BrandPurple.copy(alpha = 0.88f))
+                                .padding(horizontal = 7.dp, vertical = 2.dp),
+                        ) {
+                            Text(
+                                text = fmt,
+                                style = MaterialTheme.typography.labelSmall,
+                                fontWeight = FontWeight.SemiBold,
+                                color = Color.White,
+                            )
+                        }
+                    }
+                    Text(
+                        text = item.title,
+                        style = MaterialTheme.typography.titleSmall,
+                        fontWeight = FontWeight.Bold,
+                        color = Color.White,
+                        maxLines = 2,
+                        overflow = TextOverflow.Ellipsis,
+                    )
+                    item.score?.takeIf { it > 0 }?.let { score ->
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.spacedBy(4.dp),
+                        ) {
+                            val starColor = when {
+                                score >= 80 -> BrandGreen
+                                score >= 60 -> BrandAmber
+                                else -> Color.White
+                            }
+                            Text("★", color = starColor, style = MaterialTheme.typography.labelSmall)
+                            Text(
+                                text = "%.1f".format(score / 10.0),
+                                color = Color.White.copy(alpha = 0.90f),
+                                style = MaterialTheme.typography.labelSmall,
+                                fontWeight = FontWeight.SemiBold,
+                            )
+                        }
+                    }
+                }
+            } else {
+                // Score badge on side cards
+                item.score?.takeIf { it > 0 }?.let { score ->
+                    Badge(
+                        modifier = Modifier.align(Alignment.TopEnd).padding(6.dp),
+                        containerColor = when {
+                            score >= 80 -> BrandGreen
+                            score >= 60 -> BrandAmber
+                            else -> MaterialTheme.colorScheme.primaryContainer
+                        },
+                        contentColor = Color.White,
+                    ) {
+                        Text("%.1f".format(score / 10.0), style = MaterialTheme.typography.labelSmall)
+                    }
                 }
             }
-            Text(
-                text = item.title,
-                style = MaterialTheme.typography.titleSmall,
-                fontWeight = FontWeight.Bold,
-                color = Color.White,
-                maxLines = 2,
-                overflow = TextOverflow.Ellipsis,
-            )
         }
     }
 }
