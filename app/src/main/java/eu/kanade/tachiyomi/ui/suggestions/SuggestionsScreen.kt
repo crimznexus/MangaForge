@@ -2,8 +2,6 @@ package eu.kanade.tachiyomi.ui.suggestions
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.verticalScroll
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -28,6 +26,7 @@ import androidx.compose.animation.core.spring
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.gestures.detectHorizontalDragGestures
 import androidx.compose.foundation.layout.BoxWithConstraints
+import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.itemsIndexed
@@ -42,6 +41,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.outlined.Search
 import androidx.compose.material.icons.outlined.Tune
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.pulltorefresh.PullToRefreshBox
@@ -91,6 +91,7 @@ import cafe.adriel.voyager.navigator.currentOrThrow
 import coil3.compose.AsyncImage
 import eu.kanade.presentation.manga.components.MangaCover
 import eu.kanade.presentation.util.Screen
+import eu.kanade.tachiyomi.ui.browse.source.globalsearch.GlobalSearchScreen
 import tachiyomi.presentation.core.components.material.Scaffold
 import java.time.Year
 
@@ -147,6 +148,7 @@ object SuggestionsScreen : Screen() {
                     selectedTab   = pagerState.currentPage,
                     onSelectTab   = { scope.launch { pagerState.animateScrollToPage(it) } },
                     onOpenFilters = screenModel::openFilters,
+                    onSearch      = { navigator.push(GlobalSearchScreen(searchQuery = "")) },
                 )
             },
         ) { paddingValues ->
@@ -323,6 +325,7 @@ private fun GradientHeader(
     selectedTab: Int,
     onSelectTab: (Int) -> Unit,
     onOpenFilters: () -> Unit,
+    onSearch: () -> Unit,
 ) {
     Box(
         modifier = Modifier
@@ -352,12 +355,13 @@ private fun GradientHeader(
                         color = Color.White.copy(alpha = 0.75f),
                     )
                 }
-                IconButton(onClick = onOpenFilters) {
-                    Icon(
-                        Icons.Outlined.Tune,
-                        contentDescription = "Filters",
-                        tint = Color.White,
-                    )
+                Row {
+                    IconButton(onClick = onSearch) {
+                        Icon(Icons.Outlined.Search, contentDescription = "Search", tint = Color.White)
+                    }
+                    IconButton(onClick = onOpenFilters) {
+                        Icon(Icons.Outlined.Tune, contentDescription = "Filters", tint = Color.White)
+                    }
                 }
             }
             Spacer(Modifier.height(16.dp))
@@ -986,94 +990,115 @@ private fun FiltersBottomSheet(
     onToggleGenre: (String) -> Unit,
 ) {
     ModalBottomSheet(onDismissRequest = onDismiss) {
-        Column(
-            modifier = Modifier
-                .verticalScroll(rememberScrollState())
-                .padding(horizontal = 16.dp),
+        val currentYear = remember { Year.now().value }
+        LazyColumn(
+            modifier = Modifier.padding(horizontal = 16.dp),
+            contentPadding = PaddingValues(bottom = 24.dp),
         ) {
-            Text(
-                text = "Filters",
-                style = MaterialTheme.typography.titleLarge,
-                fontWeight = FontWeight.SemiBold,
-                modifier = Modifier.padding(bottom = 12.dp),
-            )
+            item {
+                Text(
+                    text = "Filters",
+                    style = MaterialTheme.typography.titleLarge,
+                    fontWeight = FontWeight.SemiBold,
+                    modifier = Modifier.padding(bottom = 12.dp),
+                )
+            }
 
-            SectionHeader(title = "Sort")
-            FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                SortOption.entries.forEach { option ->
-                    FilterChip(
-                        selected = draft.sort == option,
-                        onClick = { onSelectSort(option) },
-                        label = { Text(option.title) },
-                    )
+            item {
+                Column {
+                    SectionHeader(title = "Sort")
+                    FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                        SortOption.entries.forEach { option ->
+                            FilterChip(
+                                selected = draft.sort == option,
+                                onClick = { onSelectSort(option) },
+                                label = { Text(option.title) },
+                            )
+                        }
+                    }
                 }
             }
 
-            Spacer(Modifier.height(12.dp))
-            SectionHeader(title = "Status")
-            FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                FilterChip(selected = draft.status == null, onClick = { onSelectStatus(null) }, label = { Text("Any") })
-                StatusOption.entries.forEach { option ->
-                    FilterChip(
-                        selected = draft.status == option,
-                        onClick = { onSelectStatus(option) },
-                        label = { Text(option.title) },
-                    )
+            item {
+                Column {
+                    SectionHeader(title = "Status")
+                    FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                        FilterChip(selected = draft.status == null, onClick = { onSelectStatus(null) }, label = { Text("Any") })
+                        StatusOption.entries.forEach { option ->
+                            FilterChip(
+                                selected = draft.status == option,
+                                onClick = { onSelectStatus(option) },
+                                label = { Text(option.title) },
+                            )
+                        }
+                    }
                 }
             }
 
-            Spacer(Modifier.height(12.dp))
-            SectionHeader(title = "Format")
-            FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                FilterChip(selected = draft.format == null, onClick = { onSelectFormat(null) }, label = { Text("Any") })
-                FormatOption.entries.forEach { option ->
-                    FilterChip(
-                        selected = draft.format == option,
-                        onClick = { onSelectFormat(option) },
-                        label = { Text(option.title) },
-                    )
+            item {
+                Column {
+                    SectionHeader(title = "Format")
+                    FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                        FilterChip(selected = draft.format == null, onClick = { onSelectFormat(null) }, label = { Text("Any") })
+                        FormatOption.entries.forEach { option ->
+                            FilterChip(
+                                selected = draft.format == option,
+                                onClick = { onSelectFormat(option) },
+                                label = { Text(option.title) },
+                            )
+                        }
+                    }
                 }
             }
 
-            Spacer(Modifier.height(12.dp))
-            SectionHeader(title = "Year")
-            val currentYear = remember { Year.now().value }
-            LazyRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                item {
-                    FilterChip(selected = draft.year == null, onClick = { onSelectYear(null) }, label = { Text("Any") })
-                }
-                itemsIndexed((0..10).toList()) { _, delta ->
-                    val year = currentYear - delta
-                    FilterChip(
-                        selected = draft.year == year,
-                        onClick = { onSelectYear(year) },
-                        label = { Text(year.toString()) },
-                    )
-                }
-            }
-
-            Spacer(Modifier.height(12.dp))
-            SectionHeader(
-                title = if (draft.genres.isEmpty()) "Genres" else "Genres (${draft.genres.size})",
-            )
-            FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                availableGenres.forEach { genre ->
-                    FilterChip(
-                        selected = genre in draft.genres,
-                        onClick = { onToggleGenre(genre) },
-                        label = { Text(genre) },
-                    )
+            item {
+                Column {
+                    SectionHeader(title = "Year")
+                    LazyRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                        item {
+                            FilterChip(selected = draft.year == null, onClick = { onSelectYear(null) }, label = { Text("Any") })
+                        }
+                        itemsIndexed((0..10).toList()) { _, delta ->
+                            val year = currentYear - delta
+                            FilterChip(
+                                selected = draft.year == year,
+                                onClick = { onSelectYear(year) },
+                                label = { Text(year.toString()) },
+                            )
+                        }
+                    }
                 }
             }
 
-            Spacer(Modifier.height(16.dp))
-            Row(
-                modifier = Modifier.fillMaxWidth().padding(bottom = 16.dp),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically,
-            ) {
-                TextButton(onClick = onReset) { Text("Reset") }
-                Button(onClick = onApply) { Text("Apply") }
+            item {
+                Column {
+                    SectionHeader(
+                        title = if (draft.genres.isEmpty()) "Genres" else "Genres (${draft.genres.size})",
+                    )
+                    FlowRow(
+                        horizontalArrangement = Arrangement.spacedBy(8.dp),
+                        verticalArrangement = Arrangement.spacedBy(0.dp),
+                    ) {
+                        availableGenres.forEach { genre ->
+                            FilterChip(
+                                selected = genre in draft.genres,
+                                onClick = { onToggleGenre(genre) },
+                                label = { Text(genre) },
+                            )
+                        }
+                    }
+                }
+            }
+
+            item {
+                Row(
+                    modifier = Modifier.fillMaxWidth().padding(top = 8.dp),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically,
+                ) {
+                    TextButton(onClick = onReset) { Text("Reset") }
+                    Button(onClick = onApply) { Text("Apply") }
+                }
             }
         }
     }
