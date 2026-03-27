@@ -26,8 +26,8 @@ android {
     defaultConfig {
         applicationId = "io.mangaforge"
 
-        versionCode = 19
-        versionName = "0.19.5"
+        versionCode = 20
+        versionName = "1.3.0"
 
         buildConfigField("String", "COMMIT_COUNT", "\"${getLatestCommitCount()}\"")
         buildConfigField("String", "COMMIT_SHA", "\"${getLatestCommitSha()}\"")
