@@ -277,6 +277,15 @@ dependencies {
     // String similarity
     implementation(libs.stringSimilarity)
 
+    // Google Drive sync
+    implementation(libs.google.play.auth)
+    implementation(libs.google.api.client.android) {
+        exclude(group = "org.apache.httpcomponents")
+    }
+    implementation(libs.google.api.drive) {
+        exclude(group = "org.apache.httpcomponents")
+    }
+
     // Tests
     testImplementation(libs.bundles.test)
     testRuntimeOnly(libs.junit.platform.launcher)

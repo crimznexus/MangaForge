@@ -38,6 +38,8 @@ import eu.kanade.tachiyomi.data.coil.MangaCoverKeyer
 import eu.kanade.tachiyomi.data.coil.MangaKeyer
 import eu.kanade.tachiyomi.data.coil.TachiyomiImageDecoder
 import eu.kanade.tachiyomi.data.notification.Notifications
+import eu.kanade.tachiyomi.data.sync.DriveSyncJob
+import eu.kanade.tachiyomi.data.sync.GoogleDriveSync
 import eu.kanade.tachiyomi.data.updater.AppUpdateCheckJob
 import eu.kanade.tachiyomi.di.AppModule
 import eu.kanade.tachiyomi.di.PreferenceModule
@@ -105,6 +107,7 @@ class App : Application(), DefaultLifecycleObserver, SingletonImageLoader.Factor
 
         setupNotificationChannels()
         AppUpdateCheckJob.setupTask(this)
+        if (GoogleDriveSync(this).isSignedIn()) DriveSyncJob.setupTask(this)
 
         ProcessLifecycleOwner.get().lifecycle.addObserver(this)
 
