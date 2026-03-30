@@ -95,6 +95,8 @@ class SuggestionsScreenModel(
     private val anilistHeaders = Headers.Builder()
         .add("Accept", "application/json")
         .add("Content-Type", "application/json")
+        .add("Origin", "https://anilist.co")
+        .add("Referer", "https://anilist.co/")
         .build()
 
     private val client = networkHelper.nonCloudflareClient.newBuilder()
