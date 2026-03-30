@@ -286,10 +286,17 @@ object SettingsDataScreen : SearchableSettings {
         val signInLauncher = rememberLauncherForActivityResult(
             contract = ActivityResultContracts.StartActivityForResult(),
         ) { result ->
-            driveSync.handleSignInResult(result)
+            val handled = driveSync.handleSignInResult(result)
             isSignedIn = driveSync.isSignedIn()
             signedInEmail = driveSync.getSignedInEmail()
-            if (isSignedIn) DriveSyncJob.setupTask(context)
+            when {
+                isSignedIn -> {
+                    DriveSyncJob.setupTask(context)
+                    context.toast("Signed in as $signedInEmail")
+                }
+                handled -> context.toast("Sign-in completed but Drive access was not granted. Please try again.")
+                else -> context.toast("Sign-in failed or was cancelled.")
+            }
         }
 
         return Preference.PreferenceGroup(
@@ -322,7 +329,16 @@ object SettingsDataScreen : SearchableSettings {
                                             onClick = {
                                                 scope.launch {
                                                     isSyncing = true
-                                                    driveSync.sync()
+                                                    when (driveSync.sync()) {
+                                                        GoogleDriveSync.SyncResult.Success ->
+                                                            context.toast("Library backed up to Google Drive")
+                                                        GoogleDriveSync.SyncResult.PulledFromDrive ->
+                                                            context.toast("Restored from Google Drive (cloud was newer)")
+                                                        GoogleDriveSync.SyncResult.BackupFailed ->
+                                                            context.toast("Sync failed: could not create backup")
+                                                        else ->
+                                                            context.toast("Sync failed")
+                                                    }
                                                     isSyncing = false
                                                 }
                                             },
@@ -344,7 +360,14 @@ object SettingsDataScreen : SearchableSettings {
                                     OutlinedButton(
                                         onClick = {
                                             scope.launch {
-                                                driveSync.restoreFromDrive()
+                                                when (driveSync.restoreFromDrive()) {
+                                                    GoogleDriveSync.SyncResult.PulledFromDrive ->
+                                                        context.toast("Restore queued — app will reload your library")
+                                                    GoogleDriveSync.SyncResult.NoBackupFound ->
+                                                        context.toast("No backup found on Google Drive")
+                                                    else ->
+                                                        context.toast("Restore failed")
+                                                }
                                             }
                                         },
                                         modifier = Modifier.padding(top = 4.dp),

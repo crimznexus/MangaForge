@@ -22,8 +22,10 @@ import eu.kanade.tachiyomi.data.backup.restore.BackupRestoreJob
 import eu.kanade.tachiyomi.data.backup.restore.RestoreOptions
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
+import logcat.LogPriority
 import tachiyomi.core.common.preference.Preference
 import tachiyomi.core.common.preference.PreferenceStore
+import tachiyomi.core.common.util.system.logcat
 import uy.kohesive.injekt.Injekt
 import uy.kohesive.injekt.api.get
 import java.io.ByteArrayOutputStream
@@ -56,11 +58,18 @@ class GoogleDriveSync(private val context: Context) {
         return GoogleSignIn.getClient(context, options)
     }
 
-    fun handleSignInResult(result: ActivityResult) {
-        runCatching {
+    /**
+     * Returns true if sign-in succeeded, false otherwise.
+     */
+    fun handleSignInResult(result: ActivityResult): Boolean {
+        return runCatching {
             val account = GoogleSignIn.getSignedInAccountFromIntent(result.data)
                 .getResult(Exception::class.java)
             accountEmailPref.set(account?.email.orEmpty())
+            true
+        }.getOrElse { e ->
+            logcat(LogPriority.ERROR, e) { "Google Drive sign-in failed" }
+            false
         }
     }
 
@@ -70,39 +79,70 @@ class GoogleDriveSync(private val context: Context) {
         lastSyncTime.set(0L)
     }
 
-    /** Create a backup and upload it to Google Drive app-data folder. */
+    /**
+     * Bidirectional sync using last-modified timestamps.
+     *
+     * - If the Drive file is newer than our last sync → pull (restore from Drive).
+     * - Otherwise → push (upload local backup to Drive).
+     */
     suspend fun sync(): SyncResult = withContext(Dispatchers.IO) {
         val account = GoogleSignIn.getLastSignedInAccount(context)
             ?: return@withContext SyncResult.NotSignedIn
 
         val drive = buildDriveService(account)
+        val remoteFile = findBackupFile(drive)
+        val localLastSync = lastSyncTime.get()
 
-        val tempFile = java.io.File(context.cacheDir, BACKUP_FILENAME)
-        val tempUri: Uri = tempFile.toUri()
+        if (remoteFile != null && remoteFile.modifiedTimeMs > localLastSync) {
+            // Cloud is newer → pull
+            logcat { "Drive sync: remote newer (${remoteFile.modifiedTimeMs} > $localLastSync), pulling" }
+            val outputStream = ByteArrayOutputStream()
+            drive.files().get(remoteFile.id).executeMediaAndDownloadTo(outputStream)
+
+            val tempFile = java.io.File(context.cacheDir, BACKUP_FILENAME)
+            FileOutputStream(tempFile).use { it.write(outputStream.toByteArray()) }
+
+            BackupRestoreJob.start(
+                context = context,
+                uri = tempFile.toUri(),
+                options = RestoreOptions(),
+            )
+            lastSyncTime.set(remoteFile.modifiedTimeMs)
+            return@withContext SyncResult.PulledFromDrive
+        }
+
+        // Local is newer (or no remote file) → push
+        logcat { "Drive sync: pushing local backup" }
+        val backupDir = java.io.File(context.cacheDir, "drive_sync_tmp").also { it.mkdirs() }
 
         try {
-            BackupCreator(context, isAutoBackup = true).backup(tempUri, BackupOptions())
+            BackupCreator(context, isAutoBackup = true).backup(backupDir.toUri(), BackupOptions())
         } catch (e: Exception) {
+            logcat(LogPriority.ERROR, e) { "Backup creation failed" }
             return@withContext SyncResult.BackupFailed
         }
 
-        val bytes = tempFile.readBytes()
-        uploadBackup(drive, bytes)
+        val backupFile = backupDir.listFiles()?.maxByOrNull { it.lastModified() }
+            ?: return@withContext SyncResult.BackupFailed
 
+        val bytes = backupFile.readBytes()
+        backupDir.deleteRecursively()
+
+        uploadBackup(drive, bytes, existingId = remoteFile?.id)
         lastSyncTime.set(System.currentTimeMillis())
         SyncResult.Success
     }
 
-    /** Download the latest backup from Drive and queue a restore. */
+    /** Force-download the latest backup from Drive and queue a restore. */
     suspend fun restoreFromDrive(): SyncResult = withContext(Dispatchers.IO) {
         val account = GoogleSignIn.getLastSignedInAccount(context)
             ?: return@withContext SyncResult.NotSignedIn
 
         val drive = buildDriveService(account)
-        val fileId = findBackupFileId(drive) ?: return@withContext SyncResult.NoBackupFound
+        val remoteFile = findBackupFile(drive) ?: return@withContext SyncResult.NoBackupFound
 
         val outputStream = ByteArrayOutputStream()
-        drive.files().get(fileId).executeMediaAndDownloadTo(outputStream)
+        drive.files().get(remoteFile.id).executeMediaAndDownloadTo(outputStream)
 
         val tempFile = java.io.File(context.cacheDir, BACKUP_FILENAME)
         FileOutputStream(tempFile).use { it.write(outputStream.toByteArray()) }
@@ -112,7 +152,8 @@ class GoogleDriveSync(private val context: Context) {
             uri = tempFile.toUri(),
             options = RestoreOptions(),
         )
-        SyncResult.Success
+        lastSyncTime.set(remoteFile.modifiedTimeMs)
+        SyncResult.PulledFromDrive
     }
 
     // ── Private helpers ───────────────────────────────────────────────────────
@@ -127,11 +168,11 @@ class GoogleDriveSync(private val context: Context) {
             .build()
     }
 
-    private fun uploadBackup(drive: Drive, bytes: ByteArray) {
+    private fun uploadBackup(drive: Drive, bytes: ByteArray, existingId: String? = null) {
         val content = ByteArrayContent("application/octet-stream", bytes)
-        val existingId = findBackupFileId(drive)
-        if (existingId != null) {
-            drive.files().update(existingId, null, content).execute()
+        val id = existingId ?: findBackupFile(drive)?.id
+        if (id != null) {
+            drive.files().update(id, null, content).execute()
         } else {
             val metadata = File().apply {
                 name = BACKUP_FILENAME
@@ -141,22 +182,25 @@ class GoogleDriveSync(private val context: Context) {
         }
     }
 
-    private fun findBackupFileId(drive: Drive): String? =
+    private fun findBackupFile(drive: Drive): DriveFileInfo? =
         drive.files().list()
             .setSpaces("appDataFolder")
             .setQ("name = '$BACKUP_FILENAME'")
-            .setFields("files(id)")
+            .setFields("files(id,modifiedTime)")
             .execute()
             .files
             .firstOrNull()
-            ?.id
+            ?.let { DriveFileInfo(it.id, it.modifiedTime?.value ?: 0L) }
+
+    private data class DriveFileInfo(val id: String, val modifiedTimeMs: Long)
 
     companion object {
         private const val BACKUP_FILENAME = "mangaforge_backup.proto.gz"
     }
 
     sealed interface SyncResult {
-        data object Success : SyncResult
+        data object Success : SyncResult          // pushed local → cloud
+        data object PulledFromDrive : SyncResult  // pulled cloud → local (cloud was newer)
         data object NotSignedIn : SyncResult
         data object BackupFailed : SyncResult
         data object NoBackupFound : SyncResult

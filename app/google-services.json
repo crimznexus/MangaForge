@@ -1,21 +1,30 @@
 {
   "project_info": {
-    "project_number": "82031285239",
-    "project_id": "mihonapp",
-    "storage_bucket": "mihonapp.appspot.com"
+    "project_number": "1023723373403",
+    "project_id": "mangaforge-330c4",
+    "storage_bucket": "mangaforge-330c4.firebasestorage.app"
   },
   "client": [
     {
       "client_info": {
-        "mobilesdk_app_id": "1:82031285239:android:336ed6dceef55c357594f2",
+        "mobilesdk_app_id": "1:1023723373403:android:c4856340528608fc11107e",
         "android_client_info": {
-          "package_name": "app.mihon"
+          "package_name": "io.mangaforge"
         }
       },
-      "oauth_client": [],
+      "oauth_client": [
+        {
+          "client_id": "1023723373403-bhh4152978dvoait466cbcb2484kjt6t.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "io.mangaforge",
+            "certificate_hash": "6c48a834c2f8465ffce1b807b1c54328664c14cb"
+          }
+        }
+      ],
       "api_key": [
         {
-          "current_key": "AIzaSyDTvOxBQnuXADx5isKxoynPG0nlAO8bQbk"
+          "current_key": "AIzaSyASz-eXHMpaNG5XscnwExV7ql5BDDv6kW0"
         }
       ],
       "services": {
@@ -26,15 +35,24 @@
     },
     {
       "client_info": {
-        "mobilesdk_app_id": "1:82031285239:android:b7440cbdd0d33c9d7594f2",
+        "mobilesdk_app_id": "1:1023723373403:android:2bc3e47d6a7f893311107e",
         "android_client_info": {
-          "package_name": "app.mihon.debug"
+          "package_name": "io.mangaforge.dev"
         }
       },
-      "oauth_client": [],
+      "oauth_client": [
+        {
+          "client_id": "1023723373403-bhh4152978dvoait466cbcb2484kjt6t.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "io.mangaforge.dev",
+            "certificate_hash": "6c48a834c2f8465ffce1b807b1c54328664c14cb"
+          }
+        }
+      ],
       "api_key": [
         {
-          "current_key": "AIzaSyDTvOxBQnuXADx5isKxoynPG0nlAO8bQbk"
+          "current_key": "AIzaSyASz-eXHMpaNG5XscnwExV7ql5BDDv6kW0"
         }
       ],
       "services": {

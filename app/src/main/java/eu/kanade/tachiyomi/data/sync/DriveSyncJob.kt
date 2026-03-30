@@ -17,7 +17,9 @@ class DriveSyncJob(private val context: Context, workerParams: WorkerParameters)
         val sync = GoogleDriveSync(context)
         if (!sync.isSignedIn()) return Result.success() // silently skip if not signed in
         return when (sync.sync()) {
-            GoogleDriveSync.SyncResult.Success -> Result.success()
+            GoogleDriveSync.SyncResult.Success,
+            GoogleDriveSync.SyncResult.PulledFromDrive,
+            -> Result.success()
             else -> Result.retry()
         }
     }
