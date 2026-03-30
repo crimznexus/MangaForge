@@ -74,15 +74,6 @@ android {
 
             buildConfigField("String", "BUILD_TIME", "\"${getBuildTime(useLatestCommitTime = false)}\"")
         }
-        create("beta") {
-            initWith(release)
-
-            applicationIdSuffix = ".beta"
-            versionNameSuffix = "-beta"
-            signingConfig = debug.signingConfig
-
-            matchingFallbacks.addAll(commonMatchingFallbacks)
-        }
         create("benchmark") {
             initWith(release)
 
@@ -100,7 +91,6 @@ android {
     sourceSets {
         getByName("preview").res.directories.add("src/debug/res")
         getByName("benchmark").res.directories.add("src/debug/res")
-        getByName("beta").res.srcDirs("src/beta/res")
     }
 
     splits {
