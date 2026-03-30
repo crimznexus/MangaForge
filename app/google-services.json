@@ -60,6 +60,34 @@
           "other_platform_oauth_client": []
         }
       }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:1023723373403:android:2bc3e47d6a7f893311107e",
+        "android_client_info": {
+          "package_name": "io.mangaforge.beta"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "1023723373403-bhh4152978dvoait466cbcb2484kjt6t.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "io.mangaforge.beta",
+            "certificate_hash": "6c48a834c2f8465ffce1b807b1c54328664c14cb"
+          }
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyASz-eXHMpaNG5XscnwExV7ql5BDDv6kW0"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
     }
   ],
   "configuration_version": "1"
