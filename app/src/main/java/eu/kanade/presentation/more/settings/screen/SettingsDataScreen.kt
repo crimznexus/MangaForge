@@ -7,6 +7,9 @@ import android.net.Uri
 import androidx.activity.compose.ManagedActivityResultLauncher
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.material3.Button
+import androidx.compose.material3.OutlinedButton
+import androidx.compose.ui.unit.dp
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.IntrinsicSize
 import androidx.compose.foundation.layout.Row
@@ -51,6 +54,8 @@ import eu.kanade.presentation.more.settings.widget.PrefsHorizontalPadding
 import eu.kanade.presentation.util.relativeTimeSpanString
 import eu.kanade.tachiyomi.data.backup.create.BackupCreateJob
 import eu.kanade.tachiyomi.data.backup.restore.BackupRestoreJob
+import eu.kanade.tachiyomi.data.sync.DriveSyncJob
+import eu.kanade.tachiyomi.data.sync.GoogleDriveSync
 import eu.kanade.tachiyomi.data.cache.ChapterCache
 import eu.kanade.tachiyomi.data.export.LibraryExporter
 import eu.kanade.tachiyomi.data.export.LibraryExporter.ExportOptions
@@ -96,6 +101,7 @@ object SettingsDataScreen : SearchableSettings {
             Preference.PreferenceItem.InfoPreference(stringResource(MR.strings.pref_storage_location_info)),
 
             getBackupAndRestoreGroup(backupPreferences = backupPreferences),
+            getDriveSyncGroup(),
             getDataGroup(),
             getExportGroup(),
         )
@@ -260,6 +266,134 @@ object SettingsDataScreen : SearchableSettings {
                 Preference.PreferenceItem.InfoPreference(
                     stringResource(MR.strings.backup_info) + "\n\n" +
                         stringResource(MR.strings.last_auto_backup_info, relativeTimeSpanString(lastAutoBackup)),
+                ),
+            ),
+        )
+    }
+
+    @Composable
+    private fun getDriveSyncGroup(): Preference.PreferenceGroup {
+        val context = LocalContext.current
+        val scope = rememberCoroutineScope()
+        val driveSync = remember { GoogleDriveSync(context) }
+
+        var isSignedIn by remember { mutableStateOf(driveSync.isSignedIn()) }
+        var signedInEmail by remember { mutableStateOf(driveSync.getSignedInEmail()) }
+        var isSyncing by remember { mutableStateOf(false) }
+
+        val lastSync by driveSync.lastSyncTime.collectAsState()
+
+        val signInLauncher = rememberLauncherForActivityResult(
+            contract = ActivityResultContracts.StartActivityForResult(),
+        ) { result ->
+            val handled = driveSync.handleSignInResult(result)
+            isSignedIn = driveSync.isSignedIn()
+            signedInEmail = driveSync.getSignedInEmail()
+            when {
+                isSignedIn -> {
+                    DriveSyncJob.setupTask(context)
+                    context.toast("Signed in as $signedInEmail")
+                }
+                handled -> context.toast("Sign-in completed but Drive access was not granted. Please try again.")
+                else -> context.toast("Sign-in failed or was cancelled.")
+            }
+        }
+
+        return Preference.PreferenceGroup(
+            title = "Google Drive Sync",
+            preferenceItems = persistentListOf(
+                Preference.PreferenceItem.CustomPreference(title = "Google Drive Sync") {
+                    BasePreferenceWidget(
+                        subcomponent = {
+                            Column(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(horizontal = PrefsHorizontalPadding),
+                            ) {
+                                if (isSignedIn) {
+                                    Text(
+                                        text = "Signed in as $signedInEmail",
+                                        style = androidx.compose.material3.MaterialTheme.typography.bodyMedium,
+                                    )
+                                    if (lastSync > 0L) {
+                                        Text(
+                                            text = "Last synced: ${relativeTimeSpanString(lastSync)}",
+                                            style = androidx.compose.material3.MaterialTheme.typography.bodySmall,
+                                        )
+                                    }
+                                    Row(
+                                        horizontalArrangement = androidx.compose.foundation.layout.Arrangement.spacedBy(8.dp),
+                                        modifier = Modifier.padding(top = 8.dp),
+                                    ) {
+                                        Button(
+                                            onClick = {
+                                                scope.launch {
+                                                    isSyncing = true
+                                                    when (driveSync.sync()) {
+                                                        GoogleDriveSync.SyncResult.Success ->
+                                                            context.toast("Library backed up to Google Drive")
+                                                        GoogleDriveSync.SyncResult.PulledFromDrive ->
+                                                            context.toast("Restored from Google Drive (cloud was newer)")
+                                                        GoogleDriveSync.SyncResult.BackupFailed ->
+                                                            context.toast("Sync failed: could not create backup")
+                                                        else ->
+                                                            context.toast("Sync failed")
+                                                    }
+                                                    isSyncing = false
+                                                }
+                                            },
+                                            enabled = !isSyncing,
+                                        ) {
+                                            Text(if (isSyncing) "Syncing…" else "Sync Now")
+                                        }
+                                        OutlinedButton(
+                                            onClick = {
+                                                driveSync.signOut()
+                                                DriveSyncJob.cancelTask(context)
+                                                isSignedIn = false
+                                                signedInEmail = ""
+                                            },
+                                        ) {
+                                            Text("Sign Out")
+                                        }
+                                    }
+                                    OutlinedButton(
+                                        onClick = {
+                                            scope.launch {
+                                                when (driveSync.restoreFromDrive()) {
+                                                    GoogleDriveSync.SyncResult.PulledFromDrive ->
+                                                        context.toast("Restore queued — app will reload your library")
+                                                    GoogleDriveSync.SyncResult.NoBackupFound ->
+                                                        context.toast("No backup found on Google Drive")
+                                                    else ->
+                                                        context.toast("Restore failed")
+                                                }
+                                            }
+                                        },
+                                        modifier = Modifier.padding(top = 4.dp),
+                                    ) {
+                                        Text("Restore from Drive")
+                                    }
+                                } else {
+                                    Text(
+                                        text = "Back up your library to Google Drive and restore it on any device.",
+                                        style = androidx.compose.material3.MaterialTheme.typography.bodyMedium,
+                                    )
+                                    Button(
+                                        onClick = {
+                                            signInLauncher.launch(driveSync.buildSignInClient().signInIntent)
+                                        },
+                                        modifier = Modifier.padding(top = 8.dp),
+                                    ) {
+                                        Text("Sign in with Google")
+                                    }
+                                }
+                            }
+                        },
+                    )
+                },
+                Preference.PreferenceItem.InfoPreference(
+                    "Library syncs automatically every 2 days when signed in. Only the latest backup is kept in your Drive app data.",
                 ),
             ),
         )

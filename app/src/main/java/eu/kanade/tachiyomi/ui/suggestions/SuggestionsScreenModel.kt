@@ -9,6 +9,7 @@ import eu.kanade.tachiyomi.network.awaitSuccess
 import eu.kanade.tachiyomi.network.interceptor.rateLimit
 import eu.kanade.tachiyomi.network.jsonMime
 import eu.kanade.tachiyomi.network.parseAs
+import okhttp3.Headers
 import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.coroutineScope
@@ -91,7 +92,12 @@ class SuggestionsScreenModel(
 
     private val json: Json by injectLazy()
 
-    private val client = networkHelper.client.newBuilder()
+    private val anilistHeaders = Headers.Builder()
+        .add("Accept", "application/json")
+        .add("Content-Type", "application/json")
+        .build()
+
+    private val client = networkHelper.nonCloudflareClient.newBuilder()
         .rateLimit(permits = 85, period = 1.minutes)
         .build()
 
@@ -368,6 +374,7 @@ class SuggestionsScreenModel(
             client.newCall(
                 POST(
                     url = "https://graphql.anilist.co/",
+                    headers = anilistHeaders,
                     body = payload.toString().toRequestBody(jsonMime),
                 ),
             ).awaitSuccess().parseAs<ALGenreCollectionResult>().data.genreCollection
@@ -388,6 +395,7 @@ class SuggestionsScreenModel(
             client.newCall(
                 POST(
                     url = "https://graphql.anilist.co/",
+                    headers = anilistHeaders,
                     body = payload.toString().toRequestBody(jsonMime),
                 ),
             )

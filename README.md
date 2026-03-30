@@ -1,76 +1,133 @@
 <div align="center">
 
-<img src="./.github/assets/logo.svg" alt="MangaForge logo" title="MangaForge logo" width="160"/>
+<img src="./.github/assets/logo.svg" alt="MangaForge" width="120"/>
 
 # MangaForge
 
 **A modern Android manga & webtoon reader**
 
-Built with Kotlin + Jetpack Compose · Based on [Mihon](https://github.com/mihonapp/mihon)
+Built with Kotlin · Jetpack Compose · Material You
 
-[![GitHub release](https://img.shields.io/github/v/release/crimznexus/MangaForge?style=flat-square)](https://github.com/crimznexus/MangaForge/releases/latest)
-[![License](https://img.shields.io/github/license/crimznexus/MangaForge?style=flat-square)](LICENSE)
-[![Issues](https://img.shields.io/github/issues/crimznexus/MangaForge?style=flat-square)](https://github.com/crimznexus/MangaForge/issues)
+[![Release](https://img.shields.io/github/v/release/crimznexus/MangaForge?style=flat-square&logo=github&color=7B2FBE)](https://github.com/crimznexus/MangaForge/releases/latest)
+[![License](https://img.shields.io/github/license/crimznexus/MangaForge?style=flat-square&color=3A0075)](LICENSE)
+[![Issues](https://img.shields.io/github/issues/crimznexus/MangaForge?style=flat-square&color=CC44FF)](https://github.com/crimznexus/MangaForge/issues)
+[![Android](https://img.shields.io/badge/Android-8.0%2B-green?style=flat-square&logo=android)](https://github.com/crimznexus/MangaForge/releases/latest)
 
-> Under active development — features may be incomplete and behavior can change frequently.
+> Under active development — features may be incomplete and behavior may change between releases.
 
 </div>
 
 ---
 
+## Overview
+
+MangaForge is a free, open-source manga and webtoon reader for Android, built on top of [Mihon](https://github.com/mihonapp/mihon). It extends the Mihon experience with a redesigned **Discover** screen powered by AniList — giving readers a curated, visually rich way to find new manga and manhwa to read.
+
+---
+
 ## Features
 
-- Browse, read, and manage manga & webtoons from extension-based sources
-- Multiple reader modes: left-to-right, right-to-left, vertical webtoon
-- Library management with categories and filters
+### Discover
+- Curated hero carousel with featured, trending, popular, newly released, and top-rated shelves
+- Separate **Manga** (JP) and **Manhwa** (KR) tabs with swipe navigation
+- Detailed manga pages with synopsis, genres, stats, and "You Might Also Like" recommendations
+- Filter by genre, status, format, and year
+- One-tap search across all installed extensions
+
+### Reader
+- Multiple reading modes: Left-to-Right, Right-to-Left, Vertical Webtoon
 - Chapter download for offline reading
-- Tracking integration (AniList, MyAnimeList, and more)
-- Extension repository support to install community sources
-- Material You dynamic theming + OLED dark mode (default)
+- Continuous scroll and page-by-page modes
+
+### Library
+- Organize manga into custom categories
+- Filter and sort by read status, score, and more
+- Background update checks for new chapters
+
+### Extensions
+- Community-sourced extension repository support
+- Browse and install sources from any compatible repository
+
+### Customization
+- Material You dynamic color theming
+- OLED pitch-black dark mode (default)
+- Per-source reader settings
+
+---
 
 ## Download
 
-Get the latest APK from the [Releases page](https://github.com/crimznexus/MangaForge/releases/latest).
+Get the latest release from the [**Releases page**](https://github.com/crimznexus/MangaForge/releases/latest).
 
-Choose the APK matching your device:
+Select the APK that matches your device architecture:
 
-| File | Architecture |
-|------|-------------|
-| `mangaforge-*-arm64-v8a.apk` | Most modern Android phones (recommended) |
-| `mangaforge-*-armeabi-v7a.apk` | Older 32-bit ARM devices |
-| `mangaforge-*-x86_64.apk` | x86_64 emulators / Chromebooks |
-| `mangaforge-*-universal.apk` | All devices (largest file) |
+| APK | Target |
+|-----|--------|
+| `app-arm64-v8a-debug.apk` | Modern Android phones — **recommended** |
+| `app-armeabi-v7a-debug.apk` | Older 32-bit ARM devices |
+| `app-x86_64-debug.apk` | x86_64 emulators / Chromebooks |
+| `app-universal-debug.apk` | All architectures (largest file) |
 
-> Enable **Install unknown apps** in Android settings before sideloading.
+> **Note:** Enable **Install unknown apps** in Android Settings before sideloading.
 
-## Build from source
+---
 
-### Prerequisites
+## Building from Source
 
-- JDK 17
-- Android SDK (`compileSdk = 36`)
-- Android Studio Meerkat or newer (recommended)
+### Requirements
 
-### Commands
+| Tool | Version |
+|------|---------|
+| JDK | 17 |
+| Android SDK | compileSdk 36 |
+| Android Studio | Meerkat or newer |
+
+### Steps
 
 ```bash
+# Clone the repository
+git clone https://github.com/crimznexus/MangaForge.git
+cd MangaForge
+
 # Debug build
 ./gradlew :app:assembleDebug
 
-# Install directly to connected device
+# Install directly to a connected device
 ./gradlew :app:installDebug
 ```
 
-On Windows use `gradlew.bat` instead of `./gradlew`.
+> On Windows, use `gradlew.bat` instead of `./gradlew`.
+
+---
+
+## Roadmap
+
+- [ ] Persistent library sync with AniList / MyAnimeList
+- [ ] In-app extension browser & installer
+- [ ] Functional Settings screen (appearance, reader, downloads)
+- [ ] Updates & Downloads tabs
+- [ ] CI/CD pipeline for automated release builds
+
+---
 
 ## Contributing
 
-Contributions are welcome. Please read [CONTRIBUTING.md](CONTRIBUTING.md) and [CODE_OF_CONDUCT.md](CODE_OF_CONDUCT.md) before opening a pull request.
+Contributions are welcome. Please review [CONTRIBUTING.md](CONTRIBUTING.md) and [CODE_OF_CONDUCT.md](CODE_OF_CONDUCT.md) before opening a pull request.
 
-Report bugs or request features via [GitHub Issues](https://github.com/crimznexus/MangaForge/issues).
+Bug reports and feature requests go through [GitHub Issues](https://github.com/crimznexus/MangaForge/issues).
+
+---
 
 ## License
 
 MangaForge is released under the [Apache License 2.0](LICENSE).
 
-MangaForge is a fork of [Mihon](https://github.com/mihonapp/mihon), which is also licensed under Apache 2.0. All original copyright notices are retained.
+This project is a fork of [Mihon](https://github.com/mihonapp/mihon), also licensed under Apache 2.0. All original copyright notices are retained in accordance with the license terms.
+
+---
+
+<div align="center">
+
+Made with ❤️ for manga readers
+
+</div>

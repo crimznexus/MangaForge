@@ -37,6 +37,9 @@ firebase-bom = "34.11.0"
 firebase-crashlytics = "3.0.6"
 flexibleAdapter = "c8013533"
 google-services = "4.4.4"
+google-api-drive = "v3-rev20220815-2.0.0"
+google-api-client-android = "2.2.0"
+google-play-auth = "21.3.0"
 image-decoder = "41c059e540"
 injekt = "91edab2317"
 jsoup = "1.22.1"
@@ -124,6 +127,9 @@ conscrypt = { module = "org.conscrypt:conscrypt-android", version.ref = "conscry
 directionalViewPager = { module = "com.github.tachiyomiorg:DirectionalViewPager", version.ref = "directionalViewPager" }
 diskLruCache = { module = "com.jakewharton:disklrucache", version.ref = "diskLruCache" }
 firebase-analytics = { module = "com.google.firebase:firebase-analytics" }
+google-api-drive = { module = "com.google.apis:google-api-services-drive", version.ref = "google-api-drive" }
+google-api-client-android = { module = "com.google.api-client:google-api-client-android", version.ref = "google-api-client-android" }
+google-play-auth = { module = "com.google.android.gms:play-services-auth", version.ref = "google-play-auth" }
 firebase-bom = { module = "com.google.firebase:firebase-bom", version.ref = "firebase-bom" }
 firebase-crashlytics = { module = "com.google.firebase:firebase-crashlytics" }
 flexibleAdapter = { module = "com.github.arkon.FlexibleAdapter:flexible-adapter", version.ref = "flexibleAdapter" }
