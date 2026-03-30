@@ -35,13 +35,23 @@ jobs:
         uses: gradle/actions/setup-gradle@v4
 
       - name: Build APK
-        run: ./gradlew assembleDebug
+        run: |
+          if [[ "${{ steps.tag.outputs.tag }}" == *"-beta" ]]; then
+            ./gradlew assembleBeta
+          else
+            ./gradlew assembleDebug
+          fi
 
       - name: Collect APKs
         run: |
           mkdir -p release-apks
-          find app/build/outputs/apk/debug -name "*.apk" -exec sh -c \
-            'arch=$(basename "$1" .apk | sed "s/^app-//" | sed "s/-debug$//"); cp "$1" "release-apks/mangaforge-${{ steps.tag.outputs.tag }}-${arch}.apk"' _ {} \;
+          if [[ "${{ steps.tag.outputs.tag }}" == *"-beta" ]]; then
+            find app/build/outputs/apk/beta -name "*.apk" -exec sh -c \
+              'arch=$(basename "$1" .apk | sed "s/^app-//" | sed "s/-beta$//"); cp "$1" "release-apks/mangaforge-${{ steps.tag.outputs.tag }}-${arch}.apk"' _ {} \;
+          else
+            find app/build/outputs/apk/debug -name "*.apk" -exec sh -c \
+              'arch=$(basename "$1" .apk | sed "s/^app-//" | sed "s/-debug$//"); cp "$1" "release-apks/mangaforge-${{ steps.tag.outputs.tag }}-${arch}.apk"' _ {} \;
+          fi
           ls release-apks/
 
       - name: Create GitHub Release
@@ -66,4 +76,4 @@ jobs:
             > **Note:** Enable *Install unknown apps* in Android settings before sideloading.
           files: release-apks/*.apk
           draft: false
-          prerelease: false
+          prerelease: ${{ contains(steps.tag.outputs.tag, '-beta') }}
