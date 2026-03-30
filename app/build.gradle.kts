@@ -26,8 +26,8 @@ android {
     defaultConfig {
         applicationId = "io.mangaforge"
 
-        versionCode = 24
-        versionName = "1.3.4"
+        versionCode = 25
+        versionName = "1.3.5"
 
         buildConfigField("String", "COMMIT_COUNT", "\"${getLatestCommitCount()}\"")
         buildConfigField("String", "COMMIT_SHA", "\"${getLatestCommitSha()}\"")
@@ -74,6 +74,15 @@ android {
 
             buildConfigField("String", "BUILD_TIME", "\"${getBuildTime(useLatestCommitTime = false)}\"")
         }
+        create("beta") {
+            initWith(release)
+
+            applicationIdSuffix = ".beta"
+            versionNameSuffix = "-beta"
+            signingConfig = debug.signingConfig
+
+            matchingFallbacks.addAll(commonMatchingFallbacks)
+        }
         create("benchmark") {
             initWith(release)
 
@@ -91,6 +100,7 @@ android {
     sourceSets {
         getByName("preview").res.directories.add("src/debug/res")
         getByName("benchmark").res.directories.add("src/debug/res")
+        getByName("beta").res.srcDirs("src/beta/res")
     }
 
     splits {
