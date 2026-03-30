@@ -143,37 +143,6 @@ class MainActivity : BaseActivity() {
         setComposeContent {
             val context = LocalContext.current
 
-            var showBetaWarning by remember {
-                mutableStateOf(
-                    BuildConfig.DEBUG &&
-                        !getSharedPreferences("app_flags", android.content.Context.MODE_PRIVATE)
-                            .getBoolean("beta_warning_shown", false),
-                )
-            }
-
-            if (showBetaWarning) {
-                AlertDialog(
-                    onDismissRequest = {},
-                    title = { Text("Beta Version") },
-                    text = {
-                        Text(
-                            "You are using MangaForge Beta (v${BuildConfig.VERSION_NAME}).\n\n" +
-                                "This version is for testing purposes and may contain bugs or unexpected crashes.\n\n" +
-                                "Please report any issues on our GitHub page.",
-                        )
-                    },
-                    confirmButton = {
-                        TextButton(
-                            onClick = {
-                                getSharedPreferences("app_flags", android.content.Context.MODE_PRIVATE)
-                                    .edit().putBoolean("beta_warning_shown", true).apply()
-                                showBetaWarning = false
-                            },
-                        ) { Text("I Understand") }
-                    },
-                )
-            }
-
             var incognito by remember { mutableStateOf(getIncognitoState.await(null)) }
             val downloadOnly by preferences.downloadedOnly.collectAsState()
             val indexing by downloadCache.isInitializing.collectAsState()

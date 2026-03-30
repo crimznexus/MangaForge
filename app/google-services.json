@@ -18,7 +18,7 @@
           "client_type": 1,
           "android_info": {
             "package_name": "io.mangaforge",
-            "certificate_hash": "6c48a834c2f8465ffce1b807b1c54328664c14cb"
+            "certificate_hash": "5cacf30d908c1e041fb352c68e2d47e51da3dec3"
           }
         }
       ],
@@ -46,7 +46,7 @@
           "client_type": 1,
           "android_info": {
             "package_name": "io.mangaforge.dev",
-            "certificate_hash": "6c48a834c2f8465ffce1b807b1c54328664c14cb"
+            "certificate_hash": "5cacf30d908c1e041fb352c68e2d47e51da3dec3"
           }
         }
       ],
