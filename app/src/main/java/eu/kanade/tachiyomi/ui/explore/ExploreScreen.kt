@@ -2,7 +2,6 @@ package eu.kanade.tachiyomi.ui.explore
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
@@ -58,41 +57,38 @@ object ExploreScreen : Screen() {
 
         Scaffold(
             topBar = {
-                Box(
+                Column(
                     modifier = Modifier
                         .fillMaxWidth()
                         .background(Brush.linearGradient(HeaderGradient)),
                 ) {
-                    Column(
+                    Row(
                         modifier = Modifier
                             .statusBarsPadding()
-                            .padding(start = 20.dp, end = 8.dp, top = 8.dp, bottom = 18.dp),
+                            .fillMaxWidth()
+                            .padding(start = 20.dp, end = 8.dp, top = 10.dp, bottom = 4.dp),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically,
                     ) {
-                        Row(
-                            modifier = Modifier.fillMaxWidth(),
-                            horizontalArrangement = Arrangement.SpaceBetween,
-                            verticalAlignment = Alignment.Top,
-                        ) {
-                            Column {
-                                Text(
-                                    text = "Explore",
-                                    style = MaterialTheme.typography.headlineMedium,
-                                    fontWeight = FontWeight.ExtraBold,
-                                    color = Color.White,
-                                )
-                                Text(
-                                    text = "Browse your sources",
-                                    style = MaterialTheme.typography.bodySmall,
-                                    color = Color.White.copy(alpha = 0.75f),
-                                )
-                            }
-                            IconButton(onClick = screenModel::loadPopular) {
-                                Icon(
-                                    Icons.Outlined.Refresh,
-                                    contentDescription = "Refresh",
-                                    tint = Color.White,
-                                )
-                            }
+                        Column {
+                            Text(
+                                text = "Explore",
+                                style = MaterialTheme.typography.headlineMedium,
+                                fontWeight = FontWeight.ExtraBold,
+                                color = Color.White,
+                            )
+                            Text(
+                                text = "Popular from your sources",
+                                style = MaterialTheme.typography.bodySmall,
+                                color = Color.White.copy(alpha = 0.70f),
+                            )
+                        }
+                        IconButton(onClick = screenModel::loadPopular) {
+                            Icon(
+                                Icons.Outlined.Refresh,
+                                contentDescription = "Refresh",
+                                tint = Color.White,
+                            )
                         }
                     }
                     ExploreTabChips()

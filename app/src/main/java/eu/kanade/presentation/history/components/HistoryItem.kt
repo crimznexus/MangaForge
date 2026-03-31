@@ -1,6 +1,7 @@
 package eu.kanade.presentation.history.components
 
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxHeight
@@ -18,6 +19,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.PreviewLightDark
@@ -58,15 +60,15 @@ fun HistoryItem(
         Column(
             modifier = Modifier
                 .weight(1f)
-                .padding(start = MaterialTheme.padding.medium, end = MaterialTheme.padding.small),
+                .padding(start = MaterialTheme.padding.medium, end = 4.dp),
+            verticalArrangement = Arrangement.spacedBy(3.dp),
         ) {
-            val textStyle = MaterialTheme.typography.bodyMedium
             Text(
                 text = history.title,
                 fontWeight = FontWeight.SemiBold,
                 maxLines = 2,
                 overflow = TextOverflow.Ellipsis,
-                style = textStyle,
+                style = MaterialTheme.typography.bodyMedium,
             )
             val readAt = remember { history.readAt?.toTimestampString() ?: "" }
             Text(
@@ -79,8 +81,8 @@ fun HistoryItem(
                 } else {
                     readAt
                 },
-                modifier = Modifier.padding(top = 4.dp),
-                style = textStyle,
+                style = MaterialTheme.typography.bodySmall,
+                color = Color(0xFFCC44FF),
             )
         }
 
@@ -89,7 +91,7 @@ fun HistoryItem(
                 Icon(
                     imageVector = Icons.Outlined.FavoriteBorder,
                     contentDescription = stringResource(MR.strings.add_to_library),
-                    tint = MaterialTheme.colorScheme.onSurface,
+                    tint = Color(0xFF7B2FBE),
                 )
             }
         }
@@ -98,7 +100,7 @@ fun HistoryItem(
             Icon(
                 imageVector = Icons.Outlined.Delete,
                 contentDescription = stringResource(MR.strings.action_delete),
-                tint = MaterialTheme.colorScheme.onSurface,
+                tint = MaterialTheme.colorScheme.onSurfaceVariant,
             )
         }
     }
