@@ -2,7 +2,9 @@ package eu.kanade.presentation.history
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
+import eu.kanade.tachiyomi.ui.explore.ExploreTabChips
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.ui.graphics.Brush
@@ -48,7 +50,7 @@ fun HistoryScreen(
 ) {
     Scaffold(
         topBar = { scrollBehavior ->
-            Box(
+            Column(
                 modifier = Modifier
                     .fillMaxWidth()
                     .background(
@@ -77,6 +79,7 @@ fun HistoryScreen(
                     },
                     scrollBehavior = scrollBehavior,
                 )
+                ExploreTabChips()
             }
         },
         snackbarHost = { SnackbarHost(hostState = snackbarHostState) },
