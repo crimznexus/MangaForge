@@ -154,6 +154,7 @@ fun AppBar(
                 containerColor = backgroundColor ?: MaterialTheme.colorScheme.surfaceColorAtElevation(
                     elevation = if (isActionMode) 3.dp else 0.dp,
                 ),
+                scrolledContainerColor = backgroundColor ?: MaterialTheme.colorScheme.surfaceColorAtElevation(3.dp),
             ),
             scrollBehavior = scrollBehavior,
         )
