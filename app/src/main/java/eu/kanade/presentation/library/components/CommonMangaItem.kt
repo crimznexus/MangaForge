@@ -9,6 +9,7 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.RowScope
 import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxHeight
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
@@ -33,12 +34,18 @@ import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Shadow
+import androidx.compose.ui.graphics.painter.ColorPainter
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.TextStyle
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import coil3.compose.AsyncImage
 import eu.kanade.presentation.manga.components.MangaCover
+import eu.kanade.presentation.util.rememberResourceBitmapPainter
+import eu.kanade.tachiyomi.R
 import tachiyomi.i18n.MR
 import tachiyomi.presentation.core.components.BadgeGroup
 import tachiyomi.presentation.core.i18n.stringResource
@@ -222,6 +229,118 @@ fun MangaComfortableGridItem(
                 style = MaterialTheme.typography.titleSmall,
                 minLines = 2,
                 maxLines = titleMaxLines,
+            )
+        }
+    }
+}
+
+/**
+ * Full-width hero card for the most-read / first manga in a category.
+ */
+@Composable
+fun MangaFeaturedGridItem(
+    coverData: MangaCoverModel,
+    title: String,
+    readCount: Long,
+    totalChapters: Long,
+    onClick: () -> Unit,
+    onLongClick: () -> Unit,
+    isSelected: Boolean = false,
+    onClickContinueReading: (() -> Unit)? = null,
+    coverBadgeStart: (@Composable RowScope.() -> Unit)? = null,
+    coverBadgeEnd: (@Composable RowScope.() -> Unit)? = null,
+) {
+    Box(
+        modifier = Modifier
+            .fillMaxWidth()
+            .height(220.dp)
+            .clip(MaterialTheme.shapes.medium)
+            .combinedClickable(onClick = onClick, onLongClick = onLongClick)
+            .selectedOutline(isSelected = isSelected, color = MaterialTheme.colorScheme.secondary)
+            .padding(4.dp),
+    ) {
+        AsyncImage(
+            model = coverData,
+            placeholder = ColorPainter(Color(0x1F888888)),
+            error = rememberResourceBitmapPainter(id = R.drawable.cover_error),
+            contentDescription = title,
+            modifier = Modifier
+                .fillMaxSize()
+                .clip(MaterialTheme.shapes.medium)
+                .alpha(if (isSelected) GRID_SELECTED_COVER_ALPHA else 1f),
+            contentScale = ContentScale.Crop,
+        )
+        // Dark gradient overlay
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .clip(MaterialTheme.shapes.medium)
+                .background(
+                    Brush.verticalGradient(
+                        0f to Color.Transparent,
+                        0.4f to Color.Transparent,
+                        1f to Color(0xEE000000),
+                    ),
+                ),
+        )
+        // Top-start badges (downloads / unread)
+        if (coverBadgeStart != null) {
+            BadgeGroup(
+                modifier = Modifier
+                    .padding(8.dp)
+                    .align(Alignment.TopStart),
+                content = coverBadgeStart,
+            )
+        }
+        // Top-end badges (language)
+        if (coverBadgeEnd != null) {
+            BadgeGroup(
+                modifier = Modifier
+                    .padding(8.dp)
+                    .align(Alignment.TopEnd),
+                content = coverBadgeEnd,
+            )
+        }
+        // Title + progress at bottom
+        Column(
+            modifier = Modifier
+                .align(Alignment.BottomStart)
+                .padding(
+                    start = 12.dp,
+                    bottom = 12.dp,
+                    end = if (onClickContinueReading != null) 52.dp else 12.dp,
+                ),
+        ) {
+            Text(
+                text = title,
+                color = Color.White,
+                style = MaterialTheme.typography.titleMedium.copy(
+                    fontWeight = FontWeight.Bold,
+                    shadow = Shadow(color = Color.Black, blurRadius = 4f),
+                ),
+                maxLines = 2,
+                overflow = TextOverflow.Ellipsis,
+            )
+            if (totalChapters > 0) {
+                Text(
+                    text = if (readCount > 0) {
+                        "$readCount / $totalChapters ch. read"
+                    } else {
+                        "$totalChapters chapters"
+                    },
+                    color = Color.White.copy(alpha = 0.75f),
+                    style = MaterialTheme.typography.bodySmall,
+                )
+            }
+        }
+        if (onClickContinueReading != null) {
+            ContinueReadingButton(
+                size = ContinueReadingButtonSizeLarge,
+                iconSize = ContinueReadingButtonIconSizeLarge,
+                onClick = onClickContinueReading,
+                modifier = Modifier
+                    .align(Alignment.BottomEnd)
+                    .padding(ContinueReadingButtonGridPadding),
             )
         }
     }
