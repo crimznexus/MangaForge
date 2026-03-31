@@ -1,0 +1,8 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(keytool -list -v -keystore ~/.android/debug.keystore -alias androiddebugkey -storepass android -keypass android)",
+      "Bash(keytool -list -v -keystore \"/c/Users/ICrim/.android/debug.keystore\" -alias androiddebugkey -storepass android -keypass android)"
+    ]
+  }
+}

@@ -60,7 +60,7 @@ private fun MangaItem(
     onClick: () -> Unit,
     onLongClick: () -> Unit,
 ) {
-    Box(modifier = Modifier.width(96.dp)) {
+    Box(modifier = Modifier.width(110.dp)) {
         MangaComfortableGridItem(
             title = title,
             titleMaxLines = 3,
