@@ -2,6 +2,7 @@ package eu.kanade.presentation.library.components
 
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.lazy.grid.GridItemSpan
 import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
@@ -28,8 +29,50 @@ internal fun LibraryComfortableGrid(
     ) {
         globalSearchItem(searchQuery, onGlobalSearchClicked)
 
+        // Pick featured item: most-recently-read if any started, else first
+        val featuredItem = items.filter { it.libraryManga.hasStarted }
+            .maxByOrNull { it.libraryManga.lastRead }
+            ?: items.first()
+
+        item(
+            span = { GridItemSpan(maxLineSpan) },
+            contentType = "library_featured_item",
+        ) {
+            val manga = featuredItem.libraryManga.manga
+            MangaFeaturedGridItem(
+                isSelected = manga.id in selection,
+                title = manga.title,
+                readCount = featuredItem.libraryManga.readCount,
+                totalChapters = featuredItem.libraryManga.totalChapters,
+                coverData = MangaCover(
+                    mangaId = manga.id,
+                    sourceId = manga.source,
+                    isMangaFavorite = manga.favorite,
+                    url = manga.thumbnailUrl,
+                    lastModified = manga.coverLastModified,
+                ),
+                coverBadgeStart = {
+                    DownloadsBadge(count = featuredItem.downloadCount)
+                    UnreadBadge(count = featuredItem.unreadCount)
+                },
+                coverBadgeEnd = {
+                    LanguageBadge(
+                        isLocal = featuredItem.isLocal,
+                        sourceLanguage = featuredItem.sourceLanguage,
+                    )
+                },
+                onLongClick = { onLongClick(featuredItem.libraryManga) },
+                onClick = { onClick(featuredItem.libraryManga) },
+                onClickContinueReading = if (onClickContinueReading != null && featuredItem.unreadCount > 0) {
+                    { onClickContinueReading(featuredItem.libraryManga) }
+                } else {
+                    null
+                },
+            )
+        }
+
         items(
-            items = items,
+            items = items.filter { it.id != featuredItem.id },
             contentType = { "library_comfortable_grid_item" },
         ) { libraryItem ->
             val manga = libraryItem.libraryManga.manga

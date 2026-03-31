@@ -3,11 +3,11 @@ package eu.kanade.presentation.library.components
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.pager.PagerState
 import androidx.compose.material3.HorizontalDivider
-import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.PrimaryScrollableTabRow
 import androidx.compose.material3.Tab
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.zIndex
 import eu.kanade.presentation.category.visualName
@@ -26,6 +26,8 @@ internal fun LibraryTabs(
         PrimaryScrollableTabRow(
             selectedTabIndex = currentPageIndex,
             edgePadding = 0.dp,
+            containerColor = Color(0xFF3A0075),
+            contentColor = Color(0xFFCC44FF),
             // TODO: use default when width is fixed upstream
             // https://issuetracker.google.com/issues/242879624
             divider = {},
@@ -40,11 +42,12 @@ internal fun LibraryTabs(
                             badgeCount = getItemCountForCategory(category),
                         )
                     },
-                    unselectedContentColor = MaterialTheme.colorScheme.onSurface,
+                    selectedContentColor = Color(0xFFCC44FF),
+                    unselectedContentColor = Color.White.copy(alpha = 0.65f),
                 )
             }
         }
 
-        HorizontalDivider()
+        HorizontalDivider(color = Color(0xFF7B2FBE).copy(alpha = 0.5f))
     }
 }
