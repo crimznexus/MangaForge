@@ -30,6 +30,7 @@ import cafe.adriel.voyager.core.model.rememberScreenModel
 import cafe.adriel.voyager.navigator.LocalNavigator
 import cafe.adriel.voyager.navigator.currentOrThrow
 import eu.kanade.core.util.ifSourcesLoaded
+import eu.kanade.tachiyomi.ui.explore.ExploreTabChips
 import eu.kanade.presentation.browse.components.GlobalSearchCardRow
 import eu.kanade.presentation.browse.components.GlobalSearchErrorResultItem
 import eu.kanade.presentation.browse.components.GlobalSearchLoadingResultItem
@@ -94,6 +95,7 @@ object ExploreScreen : Screen() {
                             }
                         }
                     }
+                    ExploreTabChips()
                 }
             },
         ) { paddingValues ->

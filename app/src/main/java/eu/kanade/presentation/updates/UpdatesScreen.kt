@@ -3,8 +3,10 @@ package eu.kanade.presentation.updates
 import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import eu.kanade.tachiyomi.ui.explore.ExploreTabChips
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.material.icons.Icons
@@ -155,7 +157,7 @@ private fun UpdatesAppBar(
     scrollBehavior: TopAppBarScrollBehavior,
     modifier: Modifier = Modifier,
 ) {
-    Box(
+    Column(
         modifier = modifier
             .fillMaxWidth()
             .background(
@@ -210,6 +212,7 @@ private fun UpdatesAppBar(
             },
             scrollBehavior = scrollBehavior,
         )
+        ExploreTabChips()
     }
 }
 
