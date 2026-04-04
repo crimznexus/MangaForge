@@ -73,14 +73,7 @@ import uy.kohesive.injekt.api.get
 
 // ── Brand colours (shared with navigation chrome) ────────────────────────────
 
-private val NavDeep   = Color(0xFF3A0075)
-private val NavPurple = Color(0xFF7B2FBE)
-private val NavViolet = Color(0xFFCC44FF)
-private val NavCoral  = Color(0xFFFF6B6B)
 
-private val NavGradient     = listOf(NavDeep, NavPurple)
-private val NavActiveGrad   = listOf(NavPurple, NavViolet)
-private val NavExpandedGrad = listOf(NavCoral, NavPurple)
 
 // ── Screen ────────────────────────────────────────────────────────────────────
 
@@ -228,9 +221,9 @@ object HomeScreen : Screen() {
             },
             alwaysShowLabel = true,
             colors = NavigationBarItemDefaults.colors(
-                selectedIconColor = NavPurple,
-                selectedTextColor = NavPurple,
-                indicatorColor = NavPurple.copy(alpha = 0.12f),
+                selectedIconColor = MaterialTheme.colorScheme.primary,
+                selectedTextColor = MaterialTheme.colorScheme.primary,
+                indicatorColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.15f),
                 unselectedIconColor = MaterialTheme.colorScheme.onSurfaceVariant,
                 unselectedTextColor = MaterialTheme.colorScheme.onSurfaceVariant,
             ),
@@ -263,9 +256,9 @@ object HomeScreen : Screen() {
             },
             alwaysShowLabel = true,
             colors = NavigationRailItemDefaults.colors(
-                selectedIconColor = NavPurple,
-                selectedTextColor = NavPurple,
-                indicatorColor = NavPurple.copy(alpha = 0.12f),
+                selectedIconColor = MaterialTheme.colorScheme.primary,
+                selectedTextColor = MaterialTheme.colorScheme.primary,
+                indicatorColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.15f),
                 unselectedIconColor = MaterialTheme.colorScheme.onSurfaceVariant,
                 unselectedTextColor = MaterialTheme.colorScheme.onSurfaceVariant,
             ),
@@ -328,7 +321,7 @@ object HomeScreen : Screen() {
             Icon(
                 painter = tab.options.icon!!,
                 contentDescription = tab.options.title,
-                tint = if (selected) NavPurple else MaterialTheme.colorScheme.onSurfaceVariant,
+                tint = if (selected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant,
             )
         }
     }

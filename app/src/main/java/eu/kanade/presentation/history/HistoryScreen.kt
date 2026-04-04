@@ -61,7 +61,7 @@ fun HistoryScreen(
                     .fillMaxWidth()
                     .background(
                         Brush.linearGradient(
-                            listOf(Color(0xFF3A0075), Color(0xFF7B2FBE), Color(0xFFCC44FF)),
+                            listOf(MaterialTheme.colorScheme.primaryContainer, MaterialTheme.colorScheme.primary),
                         ),
                     ),
             ) {
@@ -153,11 +153,11 @@ private fun HistoryScreenContent(
                             text = relativeDateText(item.date),
                             style = MaterialTheme.typography.labelMedium,
                             fontWeight = FontWeight.Bold,
-                            color = Color(0xFFCC44FF),
+                            color = MaterialTheme.colorScheme.primary,
                         )
                         HorizontalDivider(
                             modifier = Modifier.weight(1f),
-                            color = Color(0xFF7B2FBE).copy(alpha = 0.30f),
+                            color = MaterialTheme.colorScheme.primary.copy(alpha = 0.30f),
                         )
                     }
                 }

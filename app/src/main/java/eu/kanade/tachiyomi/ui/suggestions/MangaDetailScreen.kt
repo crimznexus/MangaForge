@@ -63,9 +63,9 @@ import eu.kanade.presentation.util.Screen
 import eu.kanade.tachiyomi.ui.browse.source.globalsearch.GlobalSearchScreen
 
 // Brand colours (shared palette)
-private val DetailBrandDeep   = Color(0xFF3A0075)
-private val DetailBrandPurple = Color(0xFF7B2FBE)
-private val DetailBrandViolet = Color(0xFFCC44FF)
+
+
+
 private val DetailBrandGreen  = Color(0xFF00C853)
 private val DetailBrandAmber  = Color(0xFFFFAB00)
 
@@ -111,7 +111,7 @@ data class MangaDetailScreen(
                             modifier = Modifier.fillMaxWidth(),
                             shape = RoundedCornerShape(50),
                             colors = ButtonDefaults.buttonColors(
-                                containerColor = DetailBrandPurple,
+                                containerColor = MaterialTheme.colorScheme.primaryContainer,
                                 contentColor = Color.White,
                             ),
                         ) {
@@ -244,7 +244,7 @@ private fun DetailHero(
         if (isLoading) {
             CircularProgressIndicator(
                 modifier = Modifier.align(Alignment.Center).size(36.dp),
-                color = DetailBrandViolet,
+                color = MaterialTheme.colorScheme.primary,
                 strokeWidth = 3.dp,
             )
         }
@@ -279,7 +279,7 @@ private fun DetailHero(
                     Box(
                         modifier = Modifier
                             .clip(RoundedCornerShape(4.dp))
-                            .background(DetailBrandPurple.copy(alpha = 0.88f))
+                            .background(MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.88f))
                             .padding(horizontal = 8.dp, vertical = 3.dp),
                     ) {
                         Text(
@@ -333,7 +333,7 @@ private fun DetailHero(
                 .align(Alignment.BottomStart)
                 .fillMaxWidth()
                 .height(3.dp)
-                .background(Brush.linearGradient(listOf(DetailBrandPurple, DetailBrandViolet))),
+                .background(Brush.linearGradient(listOf(MaterialTheme.colorScheme.primaryContainer, MaterialTheme.colorScheme.primary))),
         )
     }
 }
@@ -352,13 +352,13 @@ private fun GenresSection(genres: List<String>) {
             Box(
                 modifier = Modifier
                     .clip(RoundedCornerShape(50))
-                    .background(DetailBrandPurple.copy(alpha = 0.15f))
+                    .background(MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.15f))
                     .padding(horizontal = 12.dp, vertical = 5.dp),
             ) {
                 Text(
                     text = genre,
                     style = MaterialTheme.typography.labelMedium,
-                    color = DetailBrandViolet,
+                    color = MaterialTheme.colorScheme.primary,
                 )
             }
         }
@@ -423,7 +423,7 @@ private fun DescriptionSection(description: String) {
         ) {
             Text(
                 text = if (expanded) "Show less" else "Read more",
-                color = DetailBrandPurple,
+                color = MaterialTheme.colorScheme.primaryContainer,
                 style = MaterialTheme.typography.labelMedium,
             )
         }

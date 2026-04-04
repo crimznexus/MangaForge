@@ -106,11 +106,11 @@ internal fun LazyListScope.updatesUiItems(
                         text = relativeDateText(item.date),
                         style = MaterialTheme.typography.labelMedium,
                         fontWeight = FontWeight.Bold,
-                        color = Color(0xFFCC44FF),
+                        color = MaterialTheme.colorScheme.primary,
                     )
                     HorizontalDivider(
                         modifier = Modifier.weight(1f),
-                        color = Color(0xFF7B2FBE).copy(alpha = 0.30f),
+                        color = MaterialTheme.colorScheme.primary.copy(alpha = 0.30f),
                     )
                 }
             }
@@ -213,7 +213,7 @@ private fun UpdatesUiItem(
                         contentDescription = stringResource(MR.strings.action_filter_bookmarked),
                         modifier = Modifier
                             .sizeIn(maxHeight = with(LocalDensity.current) { textHeight.toDp() - 2.dp }),
-                        tint = Color(0xFFCC44FF),
+                        tint = MaterialTheme.colorScheme.primary,
                     )
                     Spacer(modifier = Modifier.width(3.dp))
                 }
@@ -223,7 +223,7 @@ private fun UpdatesUiItem(
                     style = MaterialTheme.typography.bodySmall,
                     color = when {
                         update.read -> LocalContentColor.current.copy(alpha = DISABLED_ALPHA)
-                        else -> Color(0xFFCC44FF)
+                        else -> MaterialTheme.colorScheme.primary
                     },
                     overflow = TextOverflow.Ellipsis,
                     onTextLayout = { textHeight = it.size.height },

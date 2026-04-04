@@ -89,14 +89,6 @@ object SettingsMainScreen : Screen() {
                     title = stringResource(MR.strings.label_settings),
                     navigateUp = backPress::invoke,
                     actions = {
-                        androidx.compose.material3.Icon(
-                            painter = painterResource(id = eu.kanade.tachiyomi.R.drawable.ic_mihon),
-                            contentDescription = null,
-                            modifier = Modifier
-                                .padding(end = 8.dp)
-                                .size(32.dp),
-                            tint = Color.Unspecified
-                        )
                         AppBarActions(
                             persistentListOf(
                                 AppBar.Action(

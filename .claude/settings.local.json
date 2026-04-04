@@ -2,7 +2,16 @@
   "permissions": {
     "allow": [
       "Bash(keytool -list -v -keystore ~/.android/debug.keystore -alias androiddebugkey -storepass android -keypass android)",
-      "Bash(keytool -list -v -keystore \"/c/Users/ICrim/.android/debug.keystore\" -alias androiddebugkey -storepass android -keypass android)"
+      "Bash(keytool -list -v -keystore \"/c/Users/ICrim/.android/debug.keystore\" -alias androiddebugkey -storepass android -keypass android)",
+      "Bash(python3 -c \"from PIL import Image; img = Image.open\\('/c/Users/ICrim/Documents/MangaForge/Logo \\(2\\).png'\\); print\\(img.size, img.mode\\)\")",
+      "Bash(py -3 -c \"from PIL import Image; img = Image.open\\('C:/Users/ICrim/Documents/MangaForge/Logo \\(2\\).png'\\); print\\(img.size, img.mode\\)\")",
+      "Bash(py -3 gen_icons.py)",
+      "Bash(./gradlew assembleDebug)",
+      "Bash(./gradlew assembleDebug -p app)",
+      "Bash(ls /c/Users/ICrim/Documents/MangaForge/app/src/main/res/values*/)",
+      "Bash(grep -r \"name=\\\\\"splash\\\\\"\" /c/Users/ICrim/Documents/MangaForge/app/src/main/res/values* --include=\"*.xml\")",
+      "Bash(ls /c/Users/ICrim/Documents/MangaForge/app/src/main/res/drawable/ic_mihon_splash*)",
+      "Bash(xargs grep:*)"
     ]
   }
 }

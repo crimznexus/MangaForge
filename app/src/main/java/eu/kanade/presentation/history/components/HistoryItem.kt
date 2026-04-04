@@ -82,7 +82,7 @@ fun HistoryItem(
                     readAt
                 },
                 style = MaterialTheme.typography.bodySmall,
-                color = Color(0xFFCC44FF),
+                color = MaterialTheme.colorScheme.primary,
             )
         }
 
@@ -91,7 +91,7 @@ fun HistoryItem(
                 Icon(
                     imageVector = Icons.Outlined.FavoriteBorder,
                     contentDescription = stringResource(MR.strings.add_to_library),
-                    tint = Color(0xFF7B2FBE),
+                    tint = MaterialTheme.colorScheme.primaryContainer,
                 )
             }
         }

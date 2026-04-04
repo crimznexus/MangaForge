@@ -21,8 +21,10 @@ import androidx.compose.foundation.layout.only
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.windowInsetsPadding
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.shape.ZeroCornerSize
 import androidx.compose.material.icons.Icons
+import androidx.compose.ui.graphics.Color
 import androidx.compose.material.icons.automirrored.outlined.Label
 import androidx.compose.material.icons.outlined.BookmarkAdd
 import androidx.compose.material.icons.outlined.BookmarkRemove
@@ -86,8 +88,8 @@ fun MangaBottomActionMenu(
         val scope = rememberCoroutineScope()
         Surface(
             modifier = modifier,
-            shape = MaterialTheme.shapes.large.copy(bottomEnd = ZeroCornerSize, bottomStart = ZeroCornerSize),
-            color = MaterialTheme.colorScheme.surfaceContainerHigh,
+            shape = RoundedCornerShape(topStart = 20.dp, topEnd = 20.dp),
+            color = Color(0xFF1A0040),
         ) {
             val haptic = LocalHapticFeedback.current
             val confirm = remember { mutableStateListOf(false, false, false, false, false, false, false) }
@@ -210,6 +212,7 @@ private fun RowScope.Button(
             Icon(
                 imageVector = icon,
                 contentDescription = title,
+                tint = if (toConfirm) MaterialTheme.colorScheme.primary else Color.White.copy(alpha = 0.75f),
             )
             AnimatedVisibility(
                 visible = toConfirm,
@@ -221,6 +224,7 @@ private fun RowScope.Button(
                     overflow = TextOverflow.Visible,
                     maxLines = 1,
                     style = MaterialTheme.typography.labelSmall,
+                    color = MaterialTheme.colorScheme.primary,
                 )
             }
         }
@@ -247,8 +251,8 @@ fun LibraryBottomActionMenu(
         val scope = rememberCoroutineScope()
         Surface(
             modifier = modifier,
-            shape = MaterialTheme.shapes.large.copy(bottomEnd = ZeroCornerSize, bottomStart = ZeroCornerSize),
-            color = MaterialTheme.colorScheme.surfaceContainerHigh,
+            shape = RoundedCornerShape(topStart = 20.dp, topEnd = 20.dp),
+            color = Color(0xFF1A0040),
         ) {
             val haptic = LocalHapticFeedback.current
             val confirm = remember { mutableStateListOf(false, false, false, false, false, false) }

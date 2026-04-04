@@ -23,6 +23,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.tooling.preview.PreviewLightDark
 import androidx.compose.ui.unit.Dp
@@ -42,15 +43,18 @@ fun InfoScreen(
     canAccept: Boolean = true,
     rejectText: String? = null,
     onRejectClick: (() -> Unit)? = null,
+    containerColor: Color = Color.Unspecified,
     content: @Composable ColumnScope.() -> Unit,
 ) {
+    val effectiveBg = if (containerColor == Color.Unspecified) MaterialTheme.colorScheme.background else containerColor
     Scaffold(
+        containerColor = effectiveBg,
         bottomBar = {
             val strokeWidth = Dp.Hairline
             val borderColor = MaterialTheme.colorScheme.outline
             Column(
                 modifier = Modifier
-                    .background(MaterialTheme.colorScheme.background)
+                    .background(effectiveBg)
                     .drawBehind {
                         drawLine(
                             borderColor,
@@ -88,7 +92,7 @@ fun InfoScreen(
             modifier = Modifier
                 .zIndex(2f)
                 .secondaryItemAlpha()
-                .background(MaterialTheme.colorScheme.background)
+                .background(effectiveBg)
                 .fillMaxWidth()
                 .height(paddingValues.calculateTopPadding()),
         )

@@ -26,8 +26,8 @@ android {
     defaultConfig {
         applicationId = "io.mangaforge"
 
-        versionCode = 28
-        versionName = "1.3.8"
+        versionCode = 29
+        versionName = "1.3.9"
 
         buildConfigField("String", "COMMIT_COUNT", "\"${getLatestCommitCount()}\"")
         buildConfigField("String", "COMMIT_SHA", "\"${getLatestCommitSha()}\"")
@@ -254,6 +254,7 @@ dependencies {
 
     // Image loading
     implementation(libs.bundles.coil)
+    implementation("androidx.palette:palette-ktx:1.0.0")
     implementation(libs.subsamplingScaleImageView) {
         exclude(module = "image-decoder")
     }

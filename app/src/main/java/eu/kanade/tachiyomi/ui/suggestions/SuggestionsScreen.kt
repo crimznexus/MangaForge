@@ -95,18 +95,10 @@ import eu.kanade.tachiyomi.ui.browse.source.globalsearch.GlobalSearchScreen
 import tachiyomi.presentation.core.components.material.Scaffold
 import java.time.Year
 
-// ── Brand colour palette ──────────────────────────────────────────────────────
+// ── Score colours (functional, not brand) ────────────────────────────────────
 
-private val BrandDeep    = Color(0xFF3A0075)
-private val BrandPurple  = Color(0xFF7B2FBE)
-private val BrandViolet  = Color(0xFFCC44FF)
-private val BrandCoral   = Color(0xFFFF6B6B)
-private val BrandGreen   = Color(0xFF00C853)
-private val BrandAmber   = Color(0xFFFFAB00)
-
-private val HeaderGradient   = listOf(BrandDeep, BrandPurple, BrandViolet)
-private val AccentGradient   = listOf(BrandPurple, BrandCoral)
-private val SelectedGradient = listOf(BrandPurple, BrandViolet)
+private val BrandGreen = Color(0xFF00C853)
+private val BrandAmber = Color(0xFFFFAB00)
 
 // ── Screen ────────────────────────────────────────────────────────────────────
 
@@ -156,7 +148,7 @@ object SuggestionsScreen : Screen() {
                 Box(
                     modifier = Modifier.fillMaxSize().padding(paddingValues),
                     contentAlignment = Alignment.Center,
-                ) { CircularProgressIndicator(color = BrandPurple) }
+                ) { CircularProgressIndicator(color = MaterialTheme.colorScheme.primary) }
             } else {
                 // Tab swipe — each page is an independent scroll container
                 HorizontalPager(
@@ -253,10 +245,10 @@ object SuggestionsScreen : Screen() {
                                             Icons.Outlined.Tune,
                                             contentDescription = null,
                                             modifier = Modifier.size(16.dp),
-                                            tint = BrandPurple,
+                                            tint = MaterialTheme.colorScheme.primary,
                                         )
                                         Spacer(Modifier.width(4.dp))
-                                        Text("Filters", color = BrandPurple)
+                                        Text("Filters", color = MaterialTheme.colorScheme.primary)
                                     }
                                 }
                                 AppliedFilterChipsRow(
@@ -276,7 +268,7 @@ object SuggestionsScreen : Screen() {
                                 Box(
                                     modifier = Modifier.fillMaxWidth().height(200.dp),
                                     contentAlignment = Alignment.Center,
-                                ) { CircularProgressIndicator(color = BrandPurple) }
+                                ) { CircularProgressIndicator(color = MaterialTheme.colorScheme.primary) }
                             }
                             is ResultsState.Error -> item(
                                 key = "browse_error",
@@ -327,10 +319,14 @@ private fun GradientHeader(
     onOpenFilters: () -> Unit,
     onSearch: () -> Unit,
 ) {
+    val primaryContainer = MaterialTheme.colorScheme.primaryContainer
+    val primary = MaterialTheme.colorScheme.primary
+    val headerGradient = listOf(primaryContainer, primary)
+
     Box(
         modifier = Modifier
             .fillMaxWidth()
-            .background(Brush.linearGradient(HeaderGradient)),
+            .background(Brush.linearGradient(headerGradient)),
     ) {
         Column(
             modifier = Modifier
@@ -384,7 +380,7 @@ private fun GradientHeader(
                     ) {
                         Text(
                             text = label,
-                            color = if (selected) BrandPurple else Color.White,
+                            color = if (selected) primary else Color.White,
                             fontWeight = if (selected) FontWeight.Bold else FontWeight.Medium,
                             style = MaterialTheme.typography.labelLarge,
                         )
@@ -414,7 +410,7 @@ private fun HeroBanner(
             Box(
                 modifier = modifier.fillMaxWidth().height(300.dp),
                 contentAlignment = Alignment.Center,
-            ) { CircularProgressIndicator(color = BrandPurple) }
+            ) { CircularProgressIndicator(color = MaterialTheme.colorScheme.primary) }
         }
         return
     }
@@ -622,7 +618,7 @@ private fun CarouselCard(
                         Box(
                             modifier = Modifier
                                 .clip(RoundedCornerShape(4.dp))
-                                .background(BrandPurple.copy(alpha = 0.88f))
+                                .background(MaterialTheme.colorScheme.primary.copy(alpha = 0.88f))
                                 .padding(horizontal = 7.dp, vertical = 2.dp),
                         ) {
                             Text(
@@ -685,6 +681,7 @@ private fun CarouselCard(
 
 @Composable
 private fun ContentSectionHeader(title: String, modifier: Modifier = Modifier) {
+    val accentGradient = listOf(MaterialTheme.colorScheme.primary, MaterialTheme.colorScheme.tertiary)
     Row(
         modifier = modifier,
         verticalAlignment = Alignment.CenterVertically,
@@ -695,7 +692,7 @@ private fun ContentSectionHeader(title: String, modifier: Modifier = Modifier) {
                 .width(4.dp)
                 .height(22.dp)
                 .clip(RoundedCornerShape(2.dp))
-                .background(Brush.verticalGradient(AccentGradient)),
+                .background(Brush.verticalGradient(accentGradient)),
         )
         Text(
             text = title,
@@ -713,6 +710,7 @@ private fun PillToggle(
     selected: Int,
     onSelect: (Int) -> Unit,
 ) {
+    val selectedGradient = listOf(MaterialTheme.colorScheme.primaryContainer, MaterialTheme.colorScheme.primary)
     Row(
         modifier = Modifier
             .clip(RoundedCornerShape(50))
@@ -726,7 +724,7 @@ private fun PillToggle(
                     .clip(RoundedCornerShape(50))
                     .then(
                         if (isSelected) {
-                            Modifier.background(Brush.linearGradient(SelectedGradient))
+                            Modifier.background(Brush.linearGradient(selectedGradient))
                         } else {
                             Modifier
                         },
@@ -757,7 +755,7 @@ private fun RankedCoverRow(
         is ResultsState.Loading -> Box(
             modifier = Modifier.fillMaxWidth().height(170.dp),
             contentAlignment = Alignment.Center,
-        ) { CircularProgressIndicator(modifier = Modifier.size(24.dp), color = BrandPurple) }
+        ) { CircularProgressIndicator(modifier = Modifier.size(24.dp), color = MaterialTheme.colorScheme.primary) }
         is ResultsState.Error -> {}
         is ResultsState.Success -> LazyRow(
             horizontalArrangement = Arrangement.spacedBy(8.dp),
@@ -825,7 +823,7 @@ private fun HorizontalCoverRow(
         is ResultsState.Loading -> Box(
             modifier = Modifier.fillMaxWidth().height(170.dp),
             contentAlignment = Alignment.Center,
-        ) { CircularProgressIndicator(modifier = Modifier.size(24.dp), color = BrandPurple) }
+        ) { CircularProgressIndicator(modifier = Modifier.size(24.dp), color = MaterialTheme.colorScheme.primary) }
         is ResultsState.Error -> {}
         is ResultsState.Success -> LazyRow(
             horizontalArrangement = Arrangement.spacedBy(8.dp),

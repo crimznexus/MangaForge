@@ -162,7 +162,7 @@ private fun UpdatesAppBar(
             .fillMaxWidth()
             .background(
                 Brush.linearGradient(
-                    listOf(Color(0xFF3A0075), Color(0xFF7B2FBE), Color(0xFFCC44FF)),
+                    listOf(MaterialTheme.colorScheme.primaryContainer, MaterialTheme.colorScheme.primary),
                 ),
             ),
     ) {

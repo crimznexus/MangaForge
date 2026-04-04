@@ -4,22 +4,26 @@ import dev.icerock.moko.resources.StringResource
 import tachiyomi.i18n.MR
 
 enum class AppTheme(val titleRes: StringResource?) {
-    DEFAULT(MR.strings.label_default),
-    MONET(MR.strings.theme_monet),
-    CATPPUCCIN(MR.strings.theme_catppuccin),
-    GREEN_APPLE(MR.strings.theme_greenapple),
-    LAVENDER(MR.strings.theme_lavender),
-    MIDNIGHT_DUSK(MR.strings.theme_midnightdusk),
-    NORD(MR.strings.theme_nord),
-    STRAWBERRY_DAIQUIRI(MR.strings.theme_strawberrydaiquiri),
-    TAKO(MR.strings.theme_tako),
-    TEALTURQUOISE(MR.strings.theme_tealturquoise),
-    TIDAL_WAVE(MR.strings.theme_tidalwave),
-    YINYANG(MR.strings.theme_yinyang),
-    YOTSUBA(MR.strings.theme_yotsuba),
-    MONOCHROME(MR.strings.theme_monochrome),
+    // MangaForge brand themes
+    MANGAFORGE_CYAN(MR.strings.theme_mangaforge_cyan),
+    MANGAFORGE_NAVY(MR.strings.theme_mangaforge_navy),
+    MANGAFORGE_VIOLET(MR.strings.theme_mangaforge_violet),
 
-    // Deprecated
+    // Deprecated / legacy (hidden from picker, kept for serialization compat)
+    DEFAULT(null),
+    MONET(null),
+    CATPPUCCIN(null),
+    GREEN_APPLE(null),
+    LAVENDER(null),
+    MIDNIGHT_DUSK(null),
+    NORD(null),
+    STRAWBERRY_DAIQUIRI(null),
+    TAKO(null),
+    TEALTURQUOISE(null),
+    TIDAL_WAVE(null),
+    YINYANG(null),
+    YOTSUBA(null),
+    MONOCHROME(null),
     DARK_BLUE(null),
     HOT_PINK(null),
     BLUE(null),

@@ -1,12 +1,16 @@
 package eu.kanade.presentation.manga.components
 
+import androidx.compose.foundation.background
 import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.sizeIn
+import androidx.compose.foundation.layout.width
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Bookmark
 import androidx.compose.material.icons.filled.Circle
@@ -33,6 +37,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clipToBounds
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
@@ -92,15 +97,23 @@ fun MangaChapterListItem(
         Row(
             modifier = modifier
                 .selectedBackground(selected)
-                .combinedClickable(
-                    onClick = onClick,
-                    onLongClick = onLongClick,
-                )
-                .padding(start = 16.dp, top = 12.dp, end = 8.dp, bottom = 12.dp),
+                .combinedClickable(onClick = onClick, onLongClick = onLongClick)
+                .height(64.dp),
+            verticalAlignment = Alignment.CenterVertically,
         ) {
+            // Left accent bar
+            Box(
+                modifier = Modifier
+                    .width(3.dp)
+                    .fillMaxHeight()
+                    .background(if (!read) MaterialTheme.colorScheme.primary else Color.Transparent),
+            )
+
             Column(
-                modifier = Modifier.weight(1f),
-                verticalArrangement = Arrangement.spacedBy(6.dp),
+                modifier = Modifier
+                    .weight(1f)
+                    .padding(start = 14.dp, end = 8.dp),
+                verticalArrangement = Arrangement.spacedBy(4.dp),
             ) {
                 Row(
                     horizontalArrangement = Arrangement.spacedBy(2.dp),
@@ -123,12 +136,13 @@ fun MangaChapterListItem(
                             contentDescription = stringResource(MR.strings.action_filter_bookmarked),
                             modifier = Modifier
                                 .sizeIn(maxHeight = with(LocalDensity.current) { textHeight.toDp() - 2.dp }),
-                            tint = MaterialTheme.colorScheme.primary,
+                            tint = MaterialTheme.colorScheme.primaryContainer,
                         )
                     }
                     Text(
                         text = title,
                         style = MaterialTheme.typography.bodyMedium,
+                        fontWeight = if (!read) FontWeight.SemiBold else null,
                         maxLines = 1,
                         overflow = TextOverflow.Ellipsis,
                         onTextLayout = { textHeight = it.size.height },
@@ -137,18 +151,15 @@ fun MangaChapterListItem(
                 }
 
                 Row {
-                    val subtitleStyle = MaterialTheme.typography.bodySmall
-                        .merge(
-                            color = LocalContentColor.current
-                                .copy(alpha = if (read) DISABLED_ALPHA else SECONDARY_ALPHA),
-                        )
+                    val subtitleColor = if (read) {
+                        LocalContentColor.current.copy(alpha = DISABLED_ALPHA)
+                    } else {
+                        MaterialTheme.colorScheme.primary.copy(alpha = 0.75f)
+                    }
+                    val subtitleStyle = MaterialTheme.typography.bodySmall.merge(color = subtitleColor)
                     ProvideTextStyle(value = subtitleStyle) {
                         if (date != null) {
-                            Text(
-                                text = date,
-                                maxLines = 1,
-                                overflow = TextOverflow.Ellipsis,
-                            )
+                            Text(text = date, maxLines = 1, overflow = TextOverflow.Ellipsis)
                             if (readProgress != null || scanlator != null) DotSeparatorText()
                         }
                         if (readProgress != null) {
@@ -161,11 +172,7 @@ fun MangaChapterListItem(
                             if (scanlator != null) DotSeparatorText()
                         }
                         if (scanlator != null) {
-                            Text(
-                                text = scanlator,
-                                maxLines = 1,
-                                overflow = TextOverflow.Ellipsis,
-                            )
+                            Text(text = scanlator, maxLines = 1, overflow = TextOverflow.Ellipsis)
                         }
                     }
                 }
@@ -173,7 +180,7 @@ fun MangaChapterListItem(
 
             ChapterDownloadIndicator(
                 enabled = downloadIndicatorEnabled,
-                modifier = Modifier.padding(start = 4.dp),
+                modifier = Modifier.padding(end = 4.dp),
                 downloadStateProvider = downloadStateProvider,
                 downloadProgressProvider = downloadProgressProvider,
                 onClick = { onDownloadClick?.invoke(it) },

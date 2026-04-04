@@ -2,6 +2,7 @@ package eu.kanade.presentation.more.onboarding
 
 import androidx.activity.compose.BackHandler
 import androidx.compose.animation.AnimatedContent
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
@@ -17,6 +18,10 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.res.painterResource
+import eu.kanade.tachiyomi.R
 import soup.compose.material.motion.animation.materialSharedAxisX
 import soup.compose.material.motion.animation.rememberSlideDistance
 import tachiyomi.i18n.MR
@@ -46,44 +51,61 @@ fun OnboardingScreen(
         currentStep--
     }
 
-    InfoScreen(
-        icon = Icons.Outlined.RocketLaunch,
-        headingText = stringResource(MR.strings.onboarding_heading),
-        subtitleText = stringResource(MR.strings.onboarding_description),
-        acceptText = stringResource(
-            if (isLastStep) {
-                MR.strings.onboarding_action_finish
-            } else {
-                MR.strings.onboarding_action_next
-            },
-        ),
-        canAccept = steps[currentStep].isComplete,
-        onAcceptClick = {
-            if (isLastStep) {
-                onComplete()
-            } else {
-                currentStep++
-            }
-        },
-    ) {
+    Box(modifier = Modifier.fillMaxSize()) {
+        // Full-screen background image
+        Image(
+            painter = painterResource(R.drawable.welcome_bg),
+            contentDescription = null,
+            modifier = Modifier.fillMaxSize(),
+            contentScale = ContentScale.Crop,
+        )
+        // Dark scrim so text and cards remain readable
         Box(
             modifier = Modifier
-                .padding(vertical = MaterialTheme.padding.small)
-                .clip(MaterialTheme.shapes.small)
                 .fillMaxSize()
-                .background(MaterialTheme.colorScheme.surfaceVariant),
-        ) {
-            AnimatedContent(
-                targetState = currentStep,
-                transitionSpec = {
-                    materialSharedAxisX(
-                        forward = targetState > initialState,
-                        slideDistance = slideDistance,
-                    )
+                .background(Color.Black.copy(alpha = 0.55f)),
+        )
+
+        InfoScreen(
+            icon = Icons.Outlined.RocketLaunch,
+            headingText = stringResource(MR.strings.onboarding_heading),
+            subtitleText = stringResource(MR.strings.onboarding_description),
+            acceptText = stringResource(
+                if (isLastStep) {
+                    MR.strings.onboarding_action_finish
+                } else {
+                    MR.strings.onboarding_action_next
                 },
-                label = "stepContent",
+            ),
+            canAccept = steps[currentStep].isComplete,
+            onAcceptClick = {
+                if (isLastStep) {
+                    onComplete()
+                } else {
+                    currentStep++
+                }
+            },
+            containerColor = Color.Transparent,
+        ) {
+            Box(
+                modifier = Modifier
+                    .padding(vertical = MaterialTheme.padding.small)
+                    .clip(MaterialTheme.shapes.small)
+                    .fillMaxSize()
+                    .background(MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.85f)),
             ) {
-                steps[it].Content()
+                AnimatedContent(
+                    targetState = currentStep,
+                    transitionSpec = {
+                        materialSharedAxisX(
+                            forward = targetState > initialState,
+                            slideDistance = slideDistance,
+                        )
+                    },
+                    label = "stepContent",
+                ) {
+                    steps[it].Content()
+                }
             }
         }
     }

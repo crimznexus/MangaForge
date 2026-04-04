@@ -29,8 +29,8 @@ import androidx.compose.ui.unit.dp
 import tachiyomi.i18n.MR
 import tachiyomi.presentation.core.i18n.stringResource
 
-private val BrandPurple = Color(0xFF7B2FBE)
-private val BrandViolet = Color(0xFFCC44FF)
+
+
 
 @Composable
 fun GlobalSearchResultItem(
@@ -64,13 +64,13 @@ fun GlobalSearchResultItem(
                 Box(
                     modifier = Modifier
                         .clip(RoundedCornerShape(4.dp))
-                        .background(BrandPurple.copy(alpha = 0.13f))
+                        .background(MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.13f))
                         .padding(horizontal = 6.dp, vertical = 2.dp),
                 ) {
                     Text(
                         text = subtitle,
                         style = MaterialTheme.typography.labelSmall,
-                        color = BrandViolet,
+                        color = MaterialTheme.colorScheme.primary,
                         maxLines = 1,
                     )
                 }
@@ -78,7 +78,7 @@ fun GlobalSearchResultItem(
             Box(
                 modifier = Modifier
                     .clip(RoundedCornerShape(14.dp))
-                    .background(BrandPurple.copy(alpha = 0.10f))
+                    .background(MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.10f))
                     .clickable(onClick = onClick)
                     .padding(horizontal = 10.dp, vertical = 5.dp),
             ) {
@@ -90,12 +90,12 @@ fun GlobalSearchResultItem(
                         text = "Browse",
                         style = MaterialTheme.typography.labelSmall,
                         fontWeight = FontWeight.SemiBold,
-                        color = BrandPurple,
+                        color = MaterialTheme.colorScheme.primaryContainer,
                     )
                     Icon(
                         imageVector = Icons.AutoMirrored.Outlined.ArrowForward,
                         contentDescription = null,
-                        tint = BrandPurple,
+                        tint = MaterialTheme.colorScheme.primaryContainer,
                         modifier = Modifier.size(12.dp),
                     )
                 }
@@ -122,7 +122,7 @@ fun GlobalSearchLoadingResultItem() {
         CircularProgressIndicator(
             modifier = Modifier.size(18.dp),
             strokeWidth = 2.dp,
-            color = BrandViolet,
+            color = MaterialTheme.colorScheme.primary,
         )
     }
 }

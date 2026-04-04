@@ -242,6 +242,9 @@
     <string name="theme_yinyang">Yin &amp; Yang</string>
     <string name="theme_yotsuba">Yotsuba</string>
     <string name="theme_tidalwave">Tidal Wave</string>
+    <string name="theme_mangaforge_cyan">Forge Cyan</string>
+    <string name="theme_mangaforge_navy">Forge Navy</string>
+    <string name="theme_mangaforge_violet">Forge Violet</string>
     <string name="pref_dark_theme_pure_black">OLED mode (pure black)</string>
     <string name="pref_dark_theme_pure_black_summary">Uses true black backgrounds to save battery on OLED displays</string>
     <string name="pref_relative_format">Relative timestamps</string>

@@ -82,7 +82,7 @@ private fun LibraryRegularToolbar(
             .fillMaxWidth()
             .background(
                 Brush.linearGradient(
-                    listOf(Color(0xFF3A0075), Color(0xFF7B2FBE), Color(0xFFCC44FF)),
+                    listOf(MaterialTheme.colorScheme.primaryContainer, MaterialTheme.colorScheme.primary),
                 ),
             ),
     ) {
@@ -109,7 +109,7 @@ private fun LibraryRegularToolbar(
             onChangeSearchQuery = onSearchQueryChange,
             backgroundColor = Color.Transparent,
             actions = {
-                val filterTint = if (hasFilters) Color(0xFFCC44FF) else Color.White
+                val filterTint = if (hasFilters) MaterialTheme.colorScheme.primary else Color.White
                 AppBarActions(
                     persistentListOf(
                         AppBar.Action(
@@ -148,7 +148,7 @@ private fun LibrarySelectionToolbar(
     Column(
         modifier = Modifier
             .fillMaxWidth()
-            .background(Color(0xFF3A0075)),
+            .background(MaterialTheme.colorScheme.surface),
     ) {
         AppBar(
             titleContent = { Text(text = "$selectedCount", color = Color.White) },

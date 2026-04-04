@@ -43,8 +43,6 @@ import eu.kanade.tachiyomi.util.system.LocaleHelper
 import tachiyomi.domain.manga.model.Manga
 import tachiyomi.presentation.core.components.material.Scaffold
 
-private val HeaderGradient = listOf(Color(0xFF3A0075), Color(0xFF7B2FBE), Color(0xFFCC44FF))
-
 object ExploreScreen : Screen() {
 
     @Composable
@@ -54,13 +52,17 @@ object ExploreScreen : Screen() {
         val navigator = LocalNavigator.currentOrThrow
         val screenModel = rememberScreenModel { ExploreScreenModel() }
         val state by screenModel.state.collectAsState()
+        val headerGradient = listOf(
+            MaterialTheme.colorScheme.primaryContainer,
+            MaterialTheme.colorScheme.primary,
+        )
 
         Scaffold(
             topBar = {
                 Column(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .background(Brush.linearGradient(HeaderGradient)),
+                        .background(Brush.linearGradient(headerGradient)),
                 ) {
                     Row(
                         modifier = Modifier
