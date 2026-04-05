@@ -1,42 +1,55 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 500 580" width="500" height="580">
   <defs>
-    <linearGradient id="bgGrad" x1="0%" y1="0%" x2="100%" y2="100%">
-      <stop offset="0%"   stop-color="#8477FF"/>
-      <stop offset="100%" stop-color="#5A18C0"/>
+    <radialGradient id="bgGrad" cx="50%" cy="48%" r="72%">
+      <stop offset="0%"   stop-color="#fdf6ec"/>
+      <stop offset="100%" stop-color="#ede4d4"/>
+    </radialGradient>
+    <linearGradient id="strokeMain" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%"   stop-color="#e8341a"/>
+      <stop offset="45%"  stop-color="#c01e0e"/>
+      <stop offset="100%" stop-color="#7a0c06"/>
     </linearGradient>
-    <filter id="charGlow" x="-10%" y="-10%" width="120%" height="120%">
-      <feGaussianBlur in="SourceAlpha" stdDeviation="4" result="b"/>
-      <feFlood flood-color="#ffffff" flood-opacity="0.2" result="f"/>
-      <feComposite in="f" in2="b" operator="in" result="g"/>
-      <feMerge><feMergeNode in="g"/><feMergeNode in="SourceGraphic"/></feMerge>
+    <linearGradient id="kanjiInk" x1="0%" y1="0%" x2="6%" y2="100%">
+      <stop offset="0%"   stop-color="#1c0e0a"/>
+      <stop offset="100%" stop-color="#120808"/>
+    </linearGradient>
+    <linearGradient id="forgeGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%"   stop-color="#c8860a"/>
+      <stop offset="50%"  stop-color="#a04808"/>
+      <stop offset="100%" stop-color="#7a1e06"/>
+    </linearGradient>
+    <filter id="kanjiShadow" x="-8%" y="-8%" width="116%" height="116%">
+      <feDropShadow dx="3" dy="5" stdDeviation="8" flood-color="#8a1008" flood-opacity="0.18"/>
+    </filter>
+    <filter id="forgeShadow">
+      <feDropShadow dx="1" dy="2" stdDeviation="3" flood-color="#7a1e06" flood-opacity="0.25"/>
     </filter>
   </defs>
-
-  <!-- Background: purple gradient with rounded corners -->
-  <rect width="500" height="580" fill="url(#bgGrad)" rx="48"/>
-
-  <!-- Three diagonal stroke lines (氵motif) — left side -->
-  <line x1="68"  y1="148" x2="138" y2="228" stroke="rgba(255,255,255,0.55)" stroke-width="16" stroke-linecap="round"/>
-  <line x1="52"  y1="268" x2="122" y2="348" stroke="rgba(255,255,255,0.55)" stroke-width="16" stroke-linecap="round"/>
-  <line x1="40"  y1="388" x2="110" y2="468" stroke="rgba(255,255,255,0.55)" stroke-width="16" stroke-linecap="round"/>
-
-  <!-- 漫 character — white outline/stroke style -->
-  <text x="270" y="385" text-anchor="middle" dominant-baseline="auto"
-        font-family="'Noto Serif JP','Hiragino Mincho ProN','Yu Mincho','MS Mincho',serif"
-        font-size="290" font-weight="900"
-        fill="none"
-        stroke="white"
-        stroke-width="8"
-        filter="url(#charGlow)">漫</text>
-
-  <!-- MangaForge title -->
-  <text x="250" y="510" text-anchor="middle"
-        font-family="'Segoe UI','Helvetica Neue',Arial,sans-serif"
+  <rect width="500" height="580" fill="url(#bgGrad)" rx="20"/>
+  <path d="M 55 190 Q 115 115 195 152 Q 275 188 340 128 Q 390 82 458 118"
+        fill="none" stroke="url(#strokeMain)" stroke-width="22" stroke-linecap="round"/>
+  <path d="M 72 210 Q 130 148 202 174 Q 278 202 348 150 Q 398 112 460 140"
+        fill="none" stroke="url(#strokeMain)" stroke-width="10" stroke-linecap="round" opacity="0.55"/>
+  <text x="250" y="368" text-anchor="middle"
+        font-family="'Noto Serif JP','Yu Mincho','MS Mincho',serif"
+        font-size="280" font-weight="900"
+        fill="url(#kanjiInk)" filter="url(#kanjiShadow)">漫</text>
+  <path d="M 38 408 Q 140 480 255 438 Q 365 396 428 455 Q 452 476 474 452"
+        fill="none" stroke="url(#strokeMain)" stroke-width="26" stroke-linecap="round"/>
+  <path d="M 50 390 Q 148 456 258 420 Q 360 382 422 434 Q 448 454 468 434"
+        fill="none" stroke="url(#strokeMain)" stroke-width="11" stroke-linecap="round" opacity="0.5"/>
+  <line x1="100" y1="490" x2="400" y2="490" stroke="#c8a070" stroke-width="0.8" opacity="0.5"/>
+  <text x="250" y="540" text-anchor="middle"
+        font-family="'Georgia','Times New Roman',serif"
         font-size="52" font-weight="700"
-        fill="white" letter-spacing="2">MangaForge</text>
-
-  <!-- Tagline -->
-  <text x="250" y="550" text-anchor="middle"
+        fill="url(#forgeGrad)" filter="url(#forgeShadow)" letter-spacing="14">FORGE</text>
+  <text x="250" y="566" text-anchor="middle"
         font-family="'Courier New',monospace"
-        font-size="11" fill="rgba(255,255,255,0.65)" letter-spacing="4">READ · COLLECT · DISCOVER</text>
+        font-size="9.5" fill="#a09080" letter-spacing="5">READ · COLLECT · DISCOVER</text>
+  <g stroke="#c8a880" stroke-width="1.2" fill="none" opacity="0.4">
+    <polyline points="28,28 28,48 48,48"/>
+    <polyline points="472,28 472,48 452,48"/>
+    <polyline points="28,552 28,532 48,532"/>
+    <polyline points="472,552 472,532 452,532"/>
+  </g>
 </svg>
