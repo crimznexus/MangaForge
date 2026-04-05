@@ -4,7 +4,7 @@
 
 # MangaForge
 
-**A modern Android manga & webtoon reader**
+**The modern Android reader for manga, manhwa, and light novels**
 
 Built with Kotlin · Jetpack Compose · Material You
 
@@ -13,15 +13,13 @@ Built with Kotlin · Jetpack Compose · Material You
 [![Issues](https://img.shields.io/github/issues/crimznexus/MangaForge?style=flat-square&color=CC44FF)](https://github.com/crimznexus/MangaForge/issues)
 [![Android](https://img.shields.io/badge/Android-8.0%2B-green?style=flat-square&logo=android)](https://github.com/crimznexus/MangaForge/releases/latest)
 
-> Under active development — features may be incomplete and behavior may change between releases.
-
 </div>
 
 ---
 
 ## Overview
 
-MangaForge is a free, open-source manga and webtoon reader for Android, built on top of [Mihon](https://github.com/mihonapp/mihon). It extends the Mihon experience with a redesigned **Discover** screen powered by AniList — giving readers a curated, visually rich way to find new manga and manhwa to read.
+MangaForge is a free, open-source manga and webtoon reader for Android, built on top of [Mihon](https://github.com/mihonapp/mihon). It extends the Mihon foundation with a fully redesigned visual identity, a curated **Discover** experience powered by AniList, and a growing ecosystem of reader-focused features — all wrapped in a dark, cohesive Material You interface.
 
 ---
 
@@ -30,28 +28,30 @@ MangaForge is a free, open-source manga and webtoon reader for Android, built on
 ### Discover
 - Curated hero carousel with featured, trending, popular, newly released, and top-rated shelves
 - Separate **Manga** (JP) and **Manhwa** (KR) tabs with swipe navigation
-- Detailed manga pages with synopsis, genres, stats, and "You Might Also Like" recommendations
+- Detailed series pages with synopsis, genres, stats, and *You Might Also Like* recommendations
 - Filter by genre, status, format, and year
 - One-tap search across all installed extensions
 
 ### Reader
-- Multiple reading modes: Left-to-Right, Right-to-Left, Vertical Webtoon
-- Chapter download for offline reading
+- Left-to-Right, Right-to-Left, Vertical, and Webtoon reading modes
+- Chapter download for fully offline reading
 - Continuous scroll and page-by-page modes
+- Per-source reader preferences
 
 ### Library
-- Organize manga into custom categories
-- Filter and sort by read status, score, and more
+- Organize series into custom categories
+- Filter and sort by read status, score, update date, and more
 - Background update checks for new chapters
 
 ### Extensions
-- Community-sourced extension repository support
-- Browse and install sources from any compatible repository
+- Community-sourced extension repositories — add any compatible repo URL
+- Browse, install, and update sources directly inside the app
+- Manga, manhwa, and manhua sources from a global extension ecosystem
 
-### Customization
-- Material You dynamic color theming
-- OLED pitch-black dark mode (default)
-- Per-source reader settings
+### Themes
+- Three hand-tuned brand themes: **Forge Cyan**, **Forge Navy**, **Forge Violet**
+- Deep OLED dark surfaces with vivid accent colors
+- Consistent gradient design language across all screens
 
 ---
 
@@ -59,16 +59,16 @@ MangaForge is a free, open-source manga and webtoon reader for Android, built on
 
 Get the latest release from the [**Releases page**](https://github.com/crimznexus/MangaForge/releases/latest).
 
-Select the APK that matches your device architecture:
+Select the APK for your device:
 
 | APK | Target |
 |-----|--------|
-| `app-arm64-v8a-debug.apk` | Modern Android phones — **recommended** |
-| `app-armeabi-v7a-debug.apk` | Older 32-bit ARM devices |
-| `app-x86_64-debug.apk` | x86_64 emulators / Chromebooks |
-| `app-universal-debug.apk` | All architectures (largest file) |
+| `app-arm64-v8a` | Modern Android phones — **recommended** |
+| `app-armeabi-v7a` | Older 32-bit ARM devices |
+| `app-x86_64` | x86_64 emulators / Chromebooks |
+| `app-universal` | All architectures (largest file) |
 
-> **Note:** Enable **Install unknown apps** in Android Settings before sideloading.
+> **Sideloading:** Enable **Install unknown apps** for your browser or file manager in Android Settings → Apps before installing.
 
 ---
 
@@ -85,7 +85,6 @@ Select the APK that matches your device architecture:
 ### Steps
 
 ```bash
-# Clone the repository
 git clone https://github.com/crimznexus/MangaForge.git
 cd MangaForge
 
@@ -100,19 +99,21 @@ cd MangaForge
 
 ---
 
-## Roadmap
+## Upcoming
 
-- [ ] Persistent library sync with AniList / MyAnimeList
-- [ ] In-app extension browser & installer
-- [ ] Functional Settings screen (appearance, reader, downloads)
-- [ ] Updates & Downloads tabs
-- [ ] CI/CD pipeline for automated release builds
+| Feature | Status |
+|---------|--------|
+| **Light Novel support** — JavaScript plugin system (LNReader-compatible repos), plugin browser, and a dedicated text reader | In development |
+| Persistent library sync with AniList / MyAnimeList | Planned |
+| Novel library tab with reading progress tracking | Planned |
+| In-app extension update notifications | Planned |
+| CI/CD pipeline for automated signed release builds | Planned |
 
 ---
 
 ## Contributing
 
-Contributions are welcome. Please review [CONTRIBUTING.md](CONTRIBUTING.md) and [CODE_OF_CONDUCT.md](CODE_OF_CONDUCT.md) before opening a pull request.
+Contributions are welcome. Please read [CONTRIBUTING.md](CONTRIBUTING.md) and [CODE_OF_CONDUCT.md](CODE_OF_CONDUCT.md) before opening a pull request.
 
 Bug reports and feature requests go through [GitHub Issues](https://github.com/crimznexus/MangaForge/issues).
 
@@ -128,6 +129,6 @@ This project is a fork of [Mihon](https://github.com/mihonapp/mihon), also licen
 
 <div align="center">
 
-Made with ❤️ for manga readers
+Made for readers, by readers
 
 </div>
