@@ -32,7 +32,6 @@ import eu.kanade.presentation.components.relativeDateText
 import eu.kanade.presentation.history.components.HistoryItem
 import eu.kanade.presentation.theme.TachiyomiPreviewTheme
 import eu.kanade.presentation.util.animateItemFastScroll
-import eu.kanade.tachiyomi.ui.explore.ExploreTabChips
 import eu.kanade.tachiyomi.ui.history.HistoryScreenModel
 import kotlinx.collections.immutable.persistentListOf
 import tachiyomi.domain.history.model.HistoryWithRelations
@@ -85,7 +84,6 @@ fun HistoryScreen(
                     },
                     scrollBehavior = scrollBehavior,
                 )
-                ExploreTabChips()
             }
         },
         snackbarHost = { SnackbarHost(hostState = snackbarHostState) },

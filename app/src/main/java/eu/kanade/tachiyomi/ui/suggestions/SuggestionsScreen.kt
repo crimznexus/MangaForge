@@ -422,19 +422,6 @@ private fun HeroBanner(
     // Width captured via onSizeChanged so pointerInput can live on the outer modifier
     var containerWidthPx by remember { mutableStateOf(1f) }
 
-    LaunchedEffect(Unit) {
-        while (isActive) {
-            delay(4_000)
-            if (!isDragging) {
-                val r = scrollPos.animateTo(-1f, tween(420, easing = FastOutSlowInEasing))
-                if (r.endReason == AnimationEndReason.Finished) {
-                    currentIdx = (currentIdx + 1) % items.size
-                    scrollPos.snapTo(0f)
-                }
-            }
-        }
-    }
-
     BoxWithConstraints(
         modifier = modifier
             .fillMaxWidth()

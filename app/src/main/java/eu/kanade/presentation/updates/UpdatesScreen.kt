@@ -6,7 +6,6 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
-import eu.kanade.tachiyomi.ui.explore.ExploreTabChips
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.material.icons.Icons
@@ -212,7 +211,6 @@ private fun UpdatesAppBar(
             },
             scrollBehavior = scrollBehavior,
         )
-        ExploreTabChips()
     }
 }
 

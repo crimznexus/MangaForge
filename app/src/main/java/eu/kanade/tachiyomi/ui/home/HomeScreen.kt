@@ -44,15 +44,12 @@ import cafe.adriel.voyager.navigator.LocalNavigator
 import cafe.adriel.voyager.navigator.currentOrThrow
 import cafe.adriel.voyager.navigator.tab.LocalTabNavigator
 import cafe.adriel.voyager.navigator.tab.TabNavigator
-import eu.kanade.domain.source.service.SourcePreferences
 import eu.kanade.presentation.util.Screen
 import eu.kanade.presentation.util.isTabletUi
-import eu.kanade.tachiyomi.ui.browse.BrowseTab
 import eu.kanade.tachiyomi.ui.download.DownloadQueueScreen
-import eu.kanade.tachiyomi.ui.explore.ExploreTab
 import eu.kanade.tachiyomi.ui.library.LibraryTab
 import eu.kanade.tachiyomi.ui.manga.MangaScreen
-import eu.kanade.tachiyomi.ui.more.MoreTab
+import eu.kanade.tachiyomi.ui.more.SettingsTab
 import eu.kanade.tachiyomi.ui.suggestions.SuggestionsTab
 import eu.kanade.tachiyomi.ui.updates.UpdatesTab
 import kotlinx.coroutines.channels.Channel
@@ -91,13 +88,12 @@ object HomeScreen : Screen() {
 
     private val TABS = listOf(
         LibraryTab,
-        BrowseTab,
-        ExploreTab,
+        UpdatesTab,
         SuggestionsTab,
-        MoreTab,
+        SettingsTab,
     )
 
-    private val BOTTOM_NAV_TABS = listOf(SuggestionsTab, LibraryTab, ExploreTab, BrowseTab, MoreTab)
+    private val BOTTOM_NAV_TABS = listOf(SuggestionsTab, LibraryTab, UpdatesTab, SettingsTab)
 
     @Composable
     override fun Content() {
@@ -171,21 +167,22 @@ object HomeScreen : Screen() {
                 }
                 launch {
                     openTabEvent.receiveAsFlow().collectLatest {
-                        tabNavigator.current = when (it) {
-                            is Tab.Library -> LibraryTab
-                            Tab.Updates -> ExploreTab
-                            Tab.History -> ExploreTab
-                            is Tab.Browse -> {
-                                if (it.toExtensions) BrowseTab.showExtension()
-                                BrowseTab
+                        when (it) {
+                            is Tab.Library -> {
+                                tabNavigator.current = LibraryTab
+                                if (it.mangaIdToOpen != null) {
+                                    navigator.push(MangaScreen(it.mangaIdToOpen))
+                                }
                             }
-                            is Tab.More -> MoreTab
-                        }
-                        if (it is Tab.Library && it.mangaIdToOpen != null) {
-                            navigator.push(MangaScreen(it.mangaIdToOpen))
-                        }
-                        if (it is Tab.More && it.toDownloads) {
-                            navigator.push(DownloadQueueScreen)
+                            Tab.Updates -> {
+                                tabNavigator.current = UpdatesTab
+                            }
+                            is Tab.Settings -> {
+                                tabNavigator.current = SettingsTab
+                                if (it.toDownloads) {
+                                    navigator.push(DownloadQueueScreen)
+                                }
+                            }
                         }
                     }
                 }
@@ -296,25 +293,6 @@ object HomeScreen : Screen() {
                             }
                         }
                     }
-                    BrowseTab::class.isInstance(tab) -> {
-                        val count by produceState(initialValue = 0) {
-                            Injekt.get<SourcePreferences>().extensionUpdatesCount.changes()
-                                .collectLatest { value = it }
-                        }
-                        if (count > 0) {
-                            Badge {
-                                val desc = pluralStringResource(
-                                    MR.plurals.update_check_notification_ext_updates,
-                                    count = count,
-                                    count,
-                                )
-                                Text(
-                                    text = count.toString(),
-                                    modifier = Modifier.semantics { contentDescription = desc },
-                                )
-                            }
-                        }
-                    }
                 }
             },
         ) {
@@ -341,8 +319,6 @@ object HomeScreen : Screen() {
     sealed interface Tab {
         data class Library(val mangaIdToOpen: Long? = null) : Tab
         data object Updates : Tab
-        data object History : Tab
-        data class Browse(val toExtensions: Boolean = false) : Tab
-        data class More(val toDownloads: Boolean) : Tab
+        data class Settings(val toDownloads: Boolean = false) : Tab
     }
 }
